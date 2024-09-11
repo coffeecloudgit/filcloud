@@ -1,4 +1,5 @@
 import 'package:fils_link/package/data.dart';
+import 'package:fils_link/service/fil_price_service.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 
@@ -12,6 +13,7 @@ import '../package/http_data.dart';
 class HomeStateController extends GetxController {
   var captchaData = [].obs;
   var homeData = {}.obs;
+  var filPrice = {}.obs;
   Timer? _timer;
 
   @override
@@ -33,6 +35,12 @@ class HomeStateController extends GetxController {
   Future<void> fetchHomeData() async {
     final Map data = await HomeData.getHomeData(Data.homeUrl); // 获取数据
     homeData.value = data; // 更新数据
+  }
+
+  /// 获取FIL价格
+  Future<void> fetchFilPrice() async {
+    final Map data = await FilPriceService.getFilPrice(); // 获取数据
+    filPrice.value = data; // 更新数据
   }
 
   /// 获取图表数据

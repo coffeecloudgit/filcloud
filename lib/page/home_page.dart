@@ -18,35 +18,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Future<List>? _captchaFuture;
-  Future<Map>? _homeFuture;
-
   final HomeStateController _homeStateController =
       Get.put(HomeStateController());
-
-  Timer? _timer;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    _captchaFuture = HttpData.getChartData(Data.chartUrl);
-    _homeFuture = HomeData.getHomeData(Data.homeUrl);
-
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      setState(() {
-        _captchaFuture = HttpData.getChartData(Data.chartUrl);
-        _homeFuture = HomeData.getHomeData(Data.homeUrl);
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel(); // 取消定时器
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +157,388 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 },
+              )),
+          const SizedBox(height: 30),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              '货币价格',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+              width: double.infinity,
+              height: (MediaQuery.of(context).size.width) / 2 - 15,
+              child: Row(
+                children: [
+                  Container(
+                    width: (MediaQuery.of(context).size.width) / 2 - 15,
+                    height: (MediaQuery.of(context).size.width) / 2 - 15,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffF1F1F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffCCD6F4),
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/icons/home_3.svg',
+                                  colorFilter: const ColorFilter.mode(
+                                      Colors.black, BlendMode.srcIn),
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              '价格',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            VoidFutureBuilder(
+                                future: _homeStateController.fetchFilPrice(),
+                                builder: (context) {
+                                  return Obx(
+                                    () => Text(
+                                      _homeStateController
+                                          .filPrice['newlyPrice']
+                                          .toStringAsFixed(2),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'USD',
+                              style: TextStyle(
+                                color: Color(0xffACACAC),
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Container(
+                    width: (MediaQuery.of(context).size.width) / 2 - 15,
+                    height: (MediaQuery.of(context).size.width) / 2 - 15,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffF1F1F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffC3FDA9),
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/icons/home_4.svg',
+                                  colorFilter: const ColorFilter.mode(
+                                      Colors.black, BlendMode.srcIn),
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              '24h涨跌',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        VoidFutureBuilder(
+                            future: _homeStateController.fetchFilPrice(),
+                            builder: (context) {
+                              return Obx(
+                                () => Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        _homeStateController.filPrice[
+                                                        'percentChange'] >
+                                                    0 ||
+                                                _homeStateController.filPrice[
+                                                        'percentChange'] ==
+                                                    0
+                                            ? Transform.rotate(
+                                                angle: 3.14159,
+                                                child: SvgPicture.asset(
+                                                  'assets/icons/home_5.svg',
+                                                  colorFilter:
+                                                      const ColorFilter.mode(
+                                                          Color(0xff59df5a),
+                                                          BlendMode.srcIn),
+                                                  width: 25,
+                                                  height: 25,
+                                                ),
+                                              )
+                                            : SvgPicture.asset(
+                                                'assets/icons/home_5.svg',
+                                                colorFilter:
+                                                    const ColorFilter.mode(
+                                                        Color(0xffEB4E3D),
+                                                        BlendMode.srcIn),
+                                                width: 25,
+                                                height: 25,
+                                              ),
+                                        Text(
+                                          _homeStateController
+                                              .filPrice['percentChange']
+                                              .toString(),
+                                          maxLines: 2,
+                                          style: TextStyle(
+                                            color: _homeStateController
+                                                                .filPrice[
+                                                            'percentChange'] >
+                                                        0 ||
+                                                    _homeStateController
+                                                                .filPrice[
+                                                            'percentChange'] ==
+                                                        0
+                                                ? const Color(0xff59df5a)
+                                                : const Color(0xffEB4E3D),
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      '%',
+                                      style: TextStyle(
+                                        color: Color(0xffACACAC),
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                      ],
+                    ),
+                  ),
+                ],
+              )),
+          const SizedBox(height: 10),
+          SizedBox(
+              width: double.infinity,
+              height: (MediaQuery.of(context).size.width) / 2 - 15,
+              child: Row(
+                children: [
+                  Container(
+                    width: (MediaQuery.of(context).size.width) / 2 - 15,
+                    height: (MediaQuery.of(context).size.width) / 2 - 15,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffF1F1F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffEECEAE),
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/icons/home_6.svg',
+                                  colorFilter: const ColorFilter.mode(
+                                      Colors.black, BlendMode.srcIn),
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              '人民币汇率',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            VoidFutureBuilder(
+                                future: _homeStateController.fetchFilPrice(),
+                                builder: (context) {
+                                  return Obx(
+                                    () => Text(
+                                      _homeStateController.filPrice['cnyRate']
+                                          .toStringAsFixed(2),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'CNY',
+                              style: TextStyle(
+                                color: Color(0xffACACAC),
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Container(
+                    width: (MediaQuery.of(context).size.width) / 2 - 15,
+                    height: (MediaQuery.of(context).size.width) / 2 - 15,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffF1F1F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffB7D6F6),
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/icons/home_7.svg',
+                                  colorFilter: const ColorFilter.mode(
+                                      Colors.black, BlendMode.srcIn),
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              '24h成交额',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        VoidFutureBuilder(
+                            future: _homeStateController.fetchFilPrice(),
+                            builder: (context) {
+                              return Obx(
+                                () => Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          _homeStateController
+                                              .filPrice['flowTotal'],
+                                          maxLines: 2,
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'CNY',
+                                      style: TextStyle(
+                                        color: Color(0xffACACAC),
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                      ],
+                    ),
+                  ),
+                ],
               )),
           const SizedBox(height: 30),
           const Padding(

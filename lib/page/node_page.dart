@@ -202,9 +202,13 @@ class _NodePageState extends State<NodePage> {
                                     Row(
                                       children: [
                                         double.parse(_nodeStateController
-                                                        .totalNodeData[
-                                                    'qualityAdjPowerDelta24H']) >
-                                                0
+                                                            .totalNodeData[
+                                                        'qualityAdjPowerDelta24H']) >
+                                                    0 ||
+                                                double.parse(_nodeStateController
+                                                            .totalNodeData[
+                                                        'qualityAdjPowerDelta24H']) ==
+                                                    0
                                             ? Transform.rotate(
                                                 angle: 3.14159,
                                                 child: SvgPicture.asset(
@@ -232,9 +236,13 @@ class _NodePageState extends State<NodePage> {
                                           maxLines: 2,
                                           style: TextStyle(
                                             color: double.parse(_nodeStateController
-                                                            .totalNodeData[
-                                                        'qualityAdjPowerDelta24H']) >
-                                                    0
+                                                                .totalNodeData[
+                                                            'qualityAdjPowerDelta24H']) >
+                                                        0 ||
+                                                    double.parse(_nodeStateController
+                                                                .totalNodeData[
+                                                            'qualityAdjPowerDelta24H']) ==
+                                                        0
                                                 ? const Color(0xff59df5a)
                                                 : const Color(0xffEB4E3D),
                                             fontSize: 30,

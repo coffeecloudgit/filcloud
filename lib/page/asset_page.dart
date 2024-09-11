@@ -262,7 +262,10 @@ class _AssetPageState extends State<AssetPage> {
                               children: [
                                 Row(
                                   children: [
-                                    double.parse(totalRewards24H.value) > 0
+                                    double.parse(totalRewards24H.value) > 0 ||
+                                            double.parse(
+                                                    totalRewards24H.value) ==
+                                                0
                                         ? Transform.rotate(
                                             angle: 3.14159,
                                             child: SvgPicture.asset(
@@ -288,8 +291,11 @@ class _AssetPageState extends State<AssetPage> {
                                       maxLines: 2,
                                       style: TextStyle(
                                         color: double.parse(
-                                                    totalRewards24H.value) >
-                                                0
+                                                        totalRewards24H.value) >
+                                                    0 ||
+                                                double.parse(totalRewards24H
+                                                        .value) ==
+                                                    0
                                             ? const Color(0xff59df5a)
                                             : const Color(0xffEB4E3D),
                                         fontSize: 20,
