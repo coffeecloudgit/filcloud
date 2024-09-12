@@ -29,14 +29,13 @@ dev_dependencies:
 
 # App图标配置
 # flutter pub run flutter_launcher_icons
-flutter_icons:
+#flutter_icons:
 #  android: true
-  ios: true
-  image_path: "assets/icon/Filecoin.png" # 图标路径
+#  ios: true
+#  image_path: "assets/icon/Filecoin.png" # 图标路径
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
     - assets/icons/
     - assets/icon/

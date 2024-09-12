@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:fils_link/package/save_data.dart';
-import 'package:fils_link/service/auth_service.dart';
+import 'package:fils_link/service/push_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -217,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
                             Data.url,
                           )) {
                             // 启用推送功能
-                            // AuthService.loginUser();
+                            PushNotificationService.loginUser();
                             Get.offAll(() => const Start());
                           } else {
                             _passwordController.clear();

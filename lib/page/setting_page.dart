@@ -1,4 +1,4 @@
-import 'package:fils_link/service/auth_service.dart';
+import 'package:fils_link/service/push_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -56,13 +56,10 @@ class _SettingPageState extends State<SettingPage> {
           InkWell(
             onTap: () {
               // 向远程服务器请求退出登录
-              HttpData.logout(Data.logoutUrl).then((value) {
+              HttpData.logout(Data.logoutUrl).then((value) async {
                 if (value) {
-                  // 清除token
-                  SaveData.logout();
-
                   // 禁用推送功能
-                  // AuthService.logoutUser();
+                  PushNotificationService.logoutUser();
 
                   // 退出登录
                   Get.offAll(() => const LoginPage());

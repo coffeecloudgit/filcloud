@@ -1,10 +1,17 @@
 import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/page/login_page.dart';
+import 'package:fils_link/service/push_notification_service.dart';
 import 'package:fils_link/start/start.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-void main() {
+void main() async {
+  // 初始化 Flutter
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 初始化推送通知服务
+  await PushNotificationService.initialize();
+
   runApp(const MyApp());
 }
 
