@@ -1,14 +1,9 @@
-import 'package:fils_link/package/data.dart';
-import 'package:fils_link/package/home_data.dart';
-import 'package:fils_link/package/http_data.dart';
 import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:fils_link/tool/void_future_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
-import 'dart:async';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -415,7 +410,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             const Text(
-                              '人民币汇率',
+                              '\$ 1 =',
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 18,
@@ -492,7 +487,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             const Text(
-                              '24h成交额',
+                              '24h成交',
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 18,

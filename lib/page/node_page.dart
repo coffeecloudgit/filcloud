@@ -127,7 +127,7 @@ class _NodePageState extends State<NodePage> {
                                           .totalNodeData['qualityAdjPower'],
                                       style: const TextStyle(
                                         color: Colors.black,
-                                        fontSize: 30,
+                                        fontSize: 28,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -217,8 +217,8 @@ class _NodePageState extends State<NodePage> {
                                                       const ColorFilter.mode(
                                                           Color(0xff59df5a),
                                                           BlendMode.srcIn),
-                                                  width: 25,
-                                                  height: 25,
+                                                  width: 22,
+                                                  height: 22,
                                                 ),
                                               )
                                             : SvgPicture.asset(
@@ -227,8 +227,8 @@ class _NodePageState extends State<NodePage> {
                                                     const ColorFilter.mode(
                                                         Color(0xffEB4E3D),
                                                         BlendMode.srcIn),
-                                                width: 25,
-                                                height: 25,
+                                                width: 22,
+                                                height: 22,
                                               ),
                                         Text(
                                           _nodeStateController.totalNodeData[
@@ -245,7 +245,7 @@ class _NodePageState extends State<NodePage> {
                                                         0
                                                 ? const Color(0xff59df5a)
                                                 : const Color(0xffEB4E3D),
-                                            fontSize: 30,
+                                            fontSize: 28,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
