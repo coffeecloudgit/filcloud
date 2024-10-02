@@ -229,7 +229,7 @@ class _HomePageState extends State<HomePage> {
                                           .toStringAsFixed(2),
                                       style: const TextStyle(
                                         color: Colors.black,
-                                        fontSize: 30,
+                                        fontSize: 28,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -346,7 +346,7 @@ class _HomePageState extends State<HomePage> {
                                                         0
                                                 ? const Color(0xff59df5a)
                                                 : const Color(0xffEB4E3D),
-                                            fontSize: 30,
+                                            fontSize: 28,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -432,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                                           .toStringAsFixed(2),
                                       style: const TextStyle(
                                         color: Colors.black,
-                                        fontSize: 30,
+                                        fontSize: 28,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -512,7 +512,7 @@ class _HomePageState extends State<HomePage> {
                                           maxLines: 2,
                                           style: const TextStyle(
                                             color: Colors.black,
-                                            fontSize: 30,
+                                            fontSize: 28,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),

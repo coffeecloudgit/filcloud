@@ -55,7 +55,7 @@ class PushNotificationService {
 
     if (deviceToken != null && token != null) {
       // 通知后端开始推送
-      http.Response response = await http.post(
+      await http.post(
         Uri.parse('http://116.92.243.5:8000/api/v1/user/device_token'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',

@@ -14,4 +14,5 @@ class Data {
   static String homeUrl = 'http://116.92.243.5:8000/api/v1/fil-pool/app-get';
   static String nodeNameUrl = 'http://116.92.243.5:8000/api/v1/nodes-app/:id';
   static String nodeBlockUrl = 'http://116.92.243.5:8000/api/v1/block';
+  static String sectorUrl = 'http://116.92.243.5:8000/api/v1/nodes-app/sectors';
 }

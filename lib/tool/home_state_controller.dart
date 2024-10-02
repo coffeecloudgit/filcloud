@@ -51,6 +51,7 @@ class HomeStateController extends GetxController {
 
   @override
   void onClose() {
+    /// 页面关闭时，关闭定时器
     _timer?.cancel(); // 关闭定时器
     super.onClose();
   }

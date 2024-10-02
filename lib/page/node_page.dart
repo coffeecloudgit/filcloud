@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'dart:core';
 import 'dart:ui';
 
 import 'package:fils_link/package/data.dart';
 import 'package:fils_link/package/node_data.dart';
+import 'package:fils_link/page/sector_page.dart';
 import 'package:fils_link/tool/void_future_builder.dart';
 import 'package:fils_link/tool/node_state_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+
+import '../tool/sector_state_controller.dart';
 
 class NodePage extends StatefulWidget {
   const NodePage({super.key});
@@ -642,28 +646,79 @@ class _NodePageState extends State<NodePage> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: [
-                                              'qualityAdjPower',
-                                              'qualityAdjPowerDelta24h'
-                                            ].map((i) {
-                                              // 单位
-                                              List unit = [
-                                                'powerUnit',
-                                                'powerDeltaUnit'
-                                              ];
+                                              ...[
+                                                'qualityAdjPower',
+                                                'qualityAdjPowerDelta24h'
+                                              ].map((i) {
+                                                // 单位
+                                                List unit = [
+                                                  'powerUnit',
+                                                  'powerDeltaUnit'
+                                                ];
 
-                                              return Text(
-                                                e[i] +
-                                                    ' ' +
-                                                    e[unit[[
-                                                      'qualityAdjPower',
-                                                      'qualityAdjPowerDelta24h'
-                                                    ].indexOf(i)]],
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 14,
+                                                return Text(
+                                                  e[i] +
+                                                      ' ' +
+                                                      e[unit[[
+                                                        'qualityAdjPower',
+                                                        'qualityAdjPowerDelta24h'
+                                                      ].indexOf(i)]],
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 14,
+                                                  ),
+                                                );
+                                              }),
+                                              InkWell(
+                                                onTap: () {
+                                                  showModalBottomSheet(
+                                                      context: context,
+                                                      isScrollControlled: true,
+                                                      builder: (context) {
+                                                        return ClipRRect(
+                                                            borderRadius:
+                                                                const BorderRadius
+                                                                    .only(
+                                                              topLeft: Radius
+                                                                  .circular(20),
+                                                              topRight: Radius
+                                                                  .circular(20),
+                                                            ),
+                                                            child: SizedBox(
+                                                                height: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .height -
+                                                                    MediaQuery.of(
+                                                                            context)
+                                                                        .padding
+                                                                        .top -
+                                                                    60,
+                                                                child:
+                                                                    SectorPage(
+                                                                  nodeName:
+                                                                      e['node'],
+                                                                )));
+                                                      }).whenComplete(
+                                                    // 确保在 BottomSheet 关闭时，销毁控制器
+                                                    () {
+                                                      Get.delete<
+                                                          SectorStateController>();
+                                                    },
+                                                  );
+                                                },
+                                                highlightColor:
+                                                    Colors.transparent,
+                                                splashColor: Colors.transparent,
+                                                child: const Text(
+                                                  '扇区详情',
+                                                  style: TextStyle(
+                                                    color: Color(0xff005FEB),
+                                                    fontSize: 14,
+                                                  ),
                                                 ),
-                                              );
-                                            }).toList(),
+                                              ),
+                                            ],
                                           ),
                                           Column(
                                             crossAxisAlignment:
