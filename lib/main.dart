@@ -1,5 +1,6 @@
 import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/page/login_page.dart';
+import 'package:fils_link/service/api_service.dart';
 import 'package:fils_link/service/push_notification_service.dart';
 import 'package:fils_link/start/start.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ void main() async {
   // 初始化推送通知服务
   await PushNotificationService.initialize();
 
+  ApiService.setupDio();
+
   runApp(const MyApp());
 }
 
@@ -21,6 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      navigatorKey: ApiService.navigatorKey, // 绑定全局 navigatorKey
       title: 'FilsLink',
       builder: (context, child) {
         // 设置字体大小不随系统设置变化

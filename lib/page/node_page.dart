@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:core';
 import 'dart:ui';
 
@@ -702,8 +701,12 @@ class _NodePageState extends State<NodePage> {
                                                       }).whenComplete(
                                                     // 确保在 BottomSheet 关闭时，销毁控制器
                                                     () {
-                                                      Get.delete<
-                                                          SectorStateController>();
+                                                      // 检查控制器是否已经存在，避免重复操作
+                                                      if (Get.isRegistered<
+                                                          SectorStateController>()) {
+                                                        Get.delete<
+                                                            SectorStateController>();
+                                                      }
                                                     },
                                                   );
                                                 },

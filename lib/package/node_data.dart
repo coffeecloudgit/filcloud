@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:fils_link/package/save_data.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:fils_link/service/api_service.dart';
 
 class NodeData {
   // 获取节点数据
@@ -9,13 +8,13 @@ class NodeData {
     // 获取token
     String? token = await SaveData.getLoginData();
 
-    http.Response response =
-        await http.get(Uri.parse(url), headers: <String, String>{
-      'Authorization': 'Bearer $token',
-    });
+    Response response = await ApiService.dio.get(url,
+        options: Options(headers: {
+          'Authorization': 'Bearer $token',
+        }));
 
     // 转换为json格式
-    final jsonData = jsonDecode(response.body);
+    final jsonData = response.data;
 
     if (jsonData['code'] == 200) {
       var nodeData = jsonData['data'];
@@ -31,13 +30,13 @@ class NodeData {
     // 获取token
     String? token = await SaveData.getLoginData();
 
-    http.Response response =
-        await http.get(Uri.parse(url), headers: <String, String>{
-      'Authorization': 'Bearer $token',
-    });
+    Response response = await ApiService.dio.get(url,
+        options: Options(headers: {
+          'Authorization': 'Bearer $token',
+        }));
 
     // 转换为json格式
-    final jsonData = jsonDecode(response.body);
+    final jsonData = response.data;
 
     if (jsonData['code'] == 200) {
       var nodeData = jsonData['data'];
@@ -53,14 +52,20 @@ class NodeData {
     // 获取token
     String? token = await SaveData.getLoginData();
 
-    http.Response response = await http.put(Uri.parse(url.replaceFirst(':id', id)), headers: <String, String>{
-      'Authorization': 'Bearer $token',
-    }, body: jsonEncode(<String, String>{
-      'title': name,
-    }));
+    // 构建请求 URL
+    String apiUrl = url.replaceFirst(':id', id);
+
+    // 发起 PUT 请求
+    Response response = await ApiService.dio.put(
+      apiUrl,
+      data: {'title': name}, // 请求体 data 使用 Map 形式
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'}, // 请求头
+      ),
+    );
 
     // 转换为json格式
-    final jsonData = jsonDecode(response.body);
+    final jsonData = response.data;
 
     if (jsonData['code'] == 200) {
       return true;
@@ -74,13 +79,13 @@ class NodeData {
     // 获取token
     String? token = await SaveData.getLoginData();
 
-    http.Response response =
-        await http.get(Uri.parse(url), headers: <String, String>{
+    Response response =
+    await ApiService.dio.get(url, options: Options(headers:{
       'Authorization': 'Bearer $token',
-    });
+    }));
 
     // 转换为json格式
-    final jsonData = jsonDecode(response.body);
+    final jsonData = response.data;
 
     if (jsonData['code'] == 200) {
       var blockData = jsonData['data'];

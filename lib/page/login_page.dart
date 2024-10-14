@@ -222,6 +222,10 @@ class _LoginPageState extends State<LoginPage> {
                           } else {
                             _passwordController.clear();
                             _verifyController.clear();
+                            // 刷新验证码
+                            setState(() {
+                              _captchaFuture = HttpData.verify();
+                            });
                             Get.snackbar('提示', '登录失败');
                           }
                         }

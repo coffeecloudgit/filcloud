@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../package/save_data.dart';
 
+/// `PushNotificationService` 是一个推送通知服务
 class PushNotificationService {
   static const MethodChannel _channel =
       MethodChannel('com.fil.links/user_token');

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'dart:async';
 
 import '../package/home_data.dart';
-import '../package/http_data.dart';
 
 /// `HomeStateController` 是一个首页页面状态控制器
 ///
@@ -45,7 +44,7 @@ class HomeStateController extends GetxController {
 
   /// 获取图表数据
   Future<void> fetchCaptchaData() async {
-    final List data = await HttpData.getChartData(Data.chartUrl); // 获取数据
+    final List data = await HomeData.getChartData(Data.chartUrl); // 获取数据
     captchaData.value = data; // 更新数据
   }
 

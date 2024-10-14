@@ -21,28 +21,6 @@ class HttpData {
     }
   }
 
-  // 获取图表数据
-  static Future<List> getChartData(String url) async {
-    // 获取token
-    String? token = await SaveData.getLoginData();
-
-    http.Response response =
-        await http.get(Uri.parse(url), headers: <String, String>{
-      'Authorization': 'Bearer $token',
-    });
-
-    // 转换为json格式
-    final jsonData = jsonDecode(response.body);
-
-    if (jsonData['code'] == 200) {
-      var barData = jsonData['data'];
-
-      return barData['barData'];
-    } else {
-      throw Exception('Failed to load data');
-    }
-  }
-
   // 登录
   static Future<bool> loginUser(String username, String password, String code,
       String uuid, String url) async {
@@ -97,26 +75,6 @@ class HttpData {
       final Uint8List bytes = base64.decode(pureBase64Str);
       // 返回bytes
       return bytes;
-    }
-  }
-
-  // 获取余额和算力
-  static Future<Map> balanceAndPower(String url) async {
-    // 获取token
-    String? token = await SaveData.getLoginData();
-
-    http.Response response =
-        await http.get(Uri.parse(url), headers: <String, String>{
-      'Authorization': 'Bearer $token',
-    });
-
-    // 转换为json格式
-    final jsonData = jsonDecode(response.body);
-
-    if (jsonData['code'] == 200) {
-      return jsonData['data'];
-    } else {
-      throw Exception('Failed to load data');
     }
   }
 

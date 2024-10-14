@@ -1,7 +1,6 @@
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
+import 'package:fils_link/service/api_service.dart';
 import 'package:fils_link/package/save_data.dart';
-import 'package:http/http.dart' as http;
 
 class HomeData {
   // 获取首页数据
@@ -9,13 +8,13 @@ class HomeData {
     // 获取token
     String? token = await SaveData.getLoginData();
 
-    http.Response response =
-    await http.get(Uri.parse(url), headers: <String, String>{
+    Response response =
+    await ApiService.dio.get(url, options: Options(headers:{
       'Authorization': 'Bearer $token',
-    });
+    }));
 
     // 转换为json格式
-    final jsonData = jsonDecode(response.body);
+    final jsonData = response.data;
 
     if (jsonData['code'] == 200) {
       var homeData = jsonData['data'];
@@ -23,6 +22,28 @@ class HomeData {
       return homeData;
     } else {
       throw Exception('请求失败');
+    }
+  }
+
+  // 获取图表数据
+  static Future<List> getChartData(String url) async {
+    // 获取token
+    String? token = await SaveData.getLoginData();
+
+    Response response =
+    await ApiService.dio.get(url, options: Options(headers:{
+      'Authorization': 'Bearer $token',
+    }));
+
+    // 转换为json格式
+    final jsonData = response.data;
+
+    if (jsonData['code'] == 200) {
+      var barData = jsonData['data'];
+
+      return barData['barData'];
+    } else {
+      throw Exception('Failed to load data');
     }
   }
 }
