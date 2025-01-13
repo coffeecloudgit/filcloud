@@ -13,6 +13,8 @@ class HomeStateController extends GetxController {
   var captchaData = [].obs;
   var homeData = {}.obs;
   var filPrice = {}.obs;
+  // 可观察的错误信息
+  var error = ''.obs;
   Timer? _timer;
 
   @override
@@ -32,20 +34,42 @@ class HomeStateController extends GetxController {
 
   /// 获取首页数据
   Future<void> fetchHomeData() async {
-    final Map data = await HomeData.getHomeData(Data.homeUrl); // 获取数据
-    homeData.value = data; // 更新数据
+    try {
+      error.value = ''; // 清空之前的错误
+      final Map data = await HomeData.getHomeData(Data.homeUrl); // 获取数据
+      homeData.value = data; // 更新数据
+    } catch (e) {
+      // 捕获并记录错误，不更新 captchaData
+      error.value = e.toString();
+    }
   }
 
   /// 获取FIL价格
   Future<void> fetchFilPrice() async {
-    final Map data = await FilPriceService.getFilPrice(); // 获取数据
-    filPrice.value = data; // 更新数据
+    try {
+      error.value = ''; // 清空之前的错误
+
+      final Map data = await FilPriceService.getFilPrice(); // 获取数据
+      filPrice.value = data; // 更新数据
+    } catch (e) {
+      // 捕获并记录错误，不更新 captchaData
+      error.value = e.toString();
+    }
   }
 
   /// 获取图表数据
   Future<void> fetchCaptchaData() async {
-    final List data = await HomeData.getChartData(Data.chartUrl); // 获取数据
-    captchaData.value = data; // 更新数据
+    try {
+      error.value = ''; // 清空之前的错误
+
+      final List data = await HomeData.getChartData(Data.chartUrl); // 获取数据
+
+      // 如果数据获取成功，更新 captchaData
+      captchaData.value = data;
+    } catch (e) {
+      // 捕获并记录错误，不更新 captchaData
+      error.value = e.toString();
+    }
   }
 
   @override

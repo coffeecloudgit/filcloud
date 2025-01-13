@@ -223,16 +223,22 @@ class _HomePageState extends State<HomePage> {
                                 future: _homeStateController.fetchFilPrice(),
                                 builder: (context) {
                                   return Obx(
-                                    () => Text(
-                                      _homeStateController
-                                          .filPrice['newlyPrice']
-                                          .toStringAsFixed(2),
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                    () {
+                                      if(_homeStateController.error.value.isNotEmpty) {
+                                        return const Center(child: CircularProgressIndicator());
+                                      } else {
+                                        return Text(
+                                          _homeStateController
+                                              .filPrice['newlyPrice']
+                                              .toStringAsFixed(2),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        );
+                                      }
+                                    },
                                   );
                                 }),
                             const SizedBox(width: 8),
@@ -297,71 +303,77 @@ class _HomePageState extends State<HomePage> {
                             future: _homeStateController.fetchFilPrice(),
                             builder: (context) {
                               return Obx(
-                                () => Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
+                                () {
+                                  if(_homeStateController.error.value.isNotEmpty) {
+                                    return const Center(child: CircularProgressIndicator());
+                                  } else {
+                                    return Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        _homeStateController.filPrice[
-                                                        'percentChange'] >
-                                                    0 ||
+                                        Row(
+                                          children: [
+                                            _homeStateController.filPrice[
+                                            'percentChange'] >
+                                                0 ||
                                                 _homeStateController.filPrice[
-                                                        'percentChange'] ==
+                                                'percentChange'] ==
                                                     0
-                                            ? Transform.rotate(
-                                                angle: 3.14159,
-                                                child: SvgPicture.asset(
-                                                  'assets/icons/home_5.svg',
-                                                  colorFilter:
-                                                      const ColorFilter.mode(
-                                                          Color(0xff59df5a),
-                                                          BlendMode.srcIn),
-                                                  width: 25,
-                                                  height: 25,
-                                                ),
-                                              )
-                                            : SvgPicture.asset(
+                                                ? Transform.rotate(
+                                              angle: 3.14159,
+                                              child: SvgPicture.asset(
                                                 'assets/icons/home_5.svg',
                                                 colorFilter:
-                                                    const ColorFilter.mode(
-                                                        Color(0xffEB4E3D),
-                                                        BlendMode.srcIn),
+                                                const ColorFilter.mode(
+                                                    Color(0xff59df5a),
+                                                    BlendMode.srcIn),
                                                 width: 25,
                                                 height: 25,
                                               ),
-                                        Text(
-                                          _homeStateController
-                                              .filPrice['percentChange']
-                                              .toString(),
-                                          maxLines: 2,
-                                          style: TextStyle(
-                                            color: _homeStateController
-                                                                .filPrice[
-                                                            'percentChange'] >
-                                                        0 ||
+                                            )
+                                                : SvgPicture.asset(
+                                              'assets/icons/home_5.svg',
+                                              colorFilter:
+                                              const ColorFilter.mode(
+                                                  Color(0xffEB4E3D),
+                                                  BlendMode.srcIn),
+                                              width: 25,
+                                              height: 25,
+                                            ),
+                                            Text(
+                                              _homeStateController
+                                                  .filPrice['percentChange']
+                                                  .toString(),
+                                              maxLines: 2,
+                                              style: TextStyle(
+                                                color: _homeStateController
+                                                    .filPrice[
+                                                'percentChange'] >
+                                                    0 ||
                                                     _homeStateController
-                                                                .filPrice[
-                                                            'percentChange'] ==
+                                                        .filPrice[
+                                                    'percentChange'] ==
                                                         0
-                                                ? const Color(0xff59df5a)
-                                                : const Color(0xffEB4E3D),
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
+                                                    ? const Color(0xff59df5a)
+                                                    : const Color(0xffEB4E3D),
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          '%',
+                                          style: TextStyle(
+                                            color: Color(0xffACACAC),
+                                            fontSize: 15,
                                           ),
                                         ),
                                       ],
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      '%',
-                                      style: TextStyle(
-                                        color: Color(0xffACACAC),
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                    );
+                                  }
+                                },
                               );
                             }),
                       ],
@@ -427,15 +439,21 @@ class _HomePageState extends State<HomePage> {
                                 future: _homeStateController.fetchFilPrice(),
                                 builder: (context) {
                                   return Obx(
-                                    () => Text(
-                                      _homeStateController.filPrice['cnyRate']
-                                          .toStringAsFixed(2),
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                    () {
+                                      if(_homeStateController.error.value.isNotEmpty) {
+                                        return const Center(child: CircularProgressIndicator());
+                                      } else {
+                                        return Text(
+                                          _homeStateController.filPrice['cnyRate']
+                                              .toStringAsFixed(2),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        );
+                                      }
+                                    },
                                   );
                                 }),
                             const SizedBox(width: 8),

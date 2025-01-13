@@ -23,11 +23,7 @@ class _VoidFutureBuilderState extends State<VoidFutureBuilder> {
         future: widget.future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return Center(child: Text('Error${snapshot.error}'));
-            } else {
-              return widget.builder(context);
-            }
+            return widget.builder(context);
           } else {
             return const Center(child: CircularProgressIndicator());
           }
