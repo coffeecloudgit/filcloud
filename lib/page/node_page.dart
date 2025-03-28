@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:fils_link/package/data.dart';
 import 'package:fils_link/package/node_data.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:fils_link/page/sector_page.dart';
 import 'package:fils_link/tool/void_future_builder.dart';
 import 'package:fils_link/tool/node_state_controller.dart';
@@ -377,12 +378,20 @@ class _NodePageState extends State<NodePage> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                e['node'],
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
+                                              GestureDetector(
+                                                onTap: () {
+                                                  if (e['url'] != null && e['url'].toString().isNotEmpty) {
+                                                    launchUrl(Uri.parse(e['url']), mode: LaunchMode.externalApplication);
+                                                  }
+                                                },
+                                                child: Text(
+                                                  e['node'],
+                                                  style: TextStyle(
+                                                    color: e['url'] != null && e['url'].toString().isNotEmpty ? Colors.blue : Colors.black,
+                                                    decoration: e['url'] != null && e['url'].toString().isNotEmpty ? TextDecoration.underline : null,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
                                               ),
                                               InkWell(
