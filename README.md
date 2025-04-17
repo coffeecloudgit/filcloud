@@ -1,8 +1,8 @@
-# FilsLink - FIL Monitor iOS App
+# FilCloud - FIL Monitor iOS App
 
 ## 项目概述
 
-FilsLink 是一个使用 Flutter 开发的 Filecoin 监控应用，主要面向 iOS 平台。应用提供了 Filecoin 节点监控、消息通知、资产管理等功能，帮助用户随时掌握 Filecoin 网络状态和自身资产情况。
+FilCloud 是一个使用 Flutter 开发的 Filecoin 监控应用，主要面向 iOS 平台。应用提供了 Filecoin 节点监控、消息通知、资产管理等功能，帮助用户随时掌握 Filecoin 网络状态和自身资产情况。
 
 ## 技术栈
 

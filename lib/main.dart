@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       navigatorKey: ApiService.navigatorKey, // 绑定全局 navigatorKey
-      title: 'FilsLink',
+      title: 'FilCloud',
       builder: (context, child) {
         // 设置字体大小不随系统设置变化
         return MediaQuery(

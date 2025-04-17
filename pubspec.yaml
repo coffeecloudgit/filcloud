@@ -1,9 +1,9 @@
 name: fils_link
-description: "A FIL monitor app."
+description: "FilCloud - A Filecoin monitor app."
 
 publish_to: 'none'
 
-version: 1.0.4+6
+version: 1.0.1+1
 
 environment:
   sdk: '>=3.3.4 <4.0.0'
