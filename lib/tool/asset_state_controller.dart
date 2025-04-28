@@ -1,5 +1,7 @@
 import 'package:fils_link/package/asset_data.dart';
 import 'package:fils_link/package/data.dart';
+import 'package:fils_link/package/save_data.dart';
+import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 
@@ -10,13 +12,44 @@ import 'dart:async';
 class AssetStateController extends GetxController {
   var assetData = {}.obs;
   var blockData = [].obs;
+  var error = ''.obs;
+  var isAdmin = false.obs;
   Timer? _timer;
+  
+  // 获取 HomeStateController 的引用
+  final HomeStateController _homeStateController = Get.find<HomeStateController>();
 
   @override
   void onInit() {
     super.onInit();
-
+    
+    // 检查管理员状态
+    _checkAdminStatus();
+    
+    // 获取初始数据
+    fetchAssetData();
+    fetchBlockData();
+    
+    // 注册事件监听器，监听部门变化事件
+    ever(_homeStateController.selectedDeptId, (deptId) {
+      // 部门变化时刷新数据
+      if (deptId != null && isAdmin.value) {
+        fetchAssetData();
+        fetchBlockData();
+      }
+    });
+    
     _startTimer(); // 启动定时器
+  }
+  
+  /// 检查用户是否是管理员
+  Future<void> _checkAdminStatus() async {
+    try {
+      bool admin = await SaveData.isAdmin();
+      isAdmin.value = admin;
+    } catch (e) {
+      error.value = e.toString();
+    }
   }
 
   /// 启动定时器
@@ -29,14 +62,40 @@ class AssetStateController extends GetxController {
 
   /// 获取资产数据
   Future<void> fetchAssetData() async {
-    final Map data = await AssetData.getAssetData(Data.totalAssetUrl); // 获取数据
-    assetData.value = data; // 更新数据
+    try {
+      error.value = ''; // 清空之前的错误
+      
+      // 如果是管理员，获取当前选中的部门 ID
+      int? deptId;
+      if (isAdmin.value) {
+        deptId = _homeStateController.selectedDeptId.value;
+      }
+      
+      final Map data = await AssetData.getAssetData(Data.totalAssetUrl, deptId: deptId); // 获取数据
+      assetData.value = data; // 更新数据
+    } catch (e) {
+      // 捕获并记录错误
+      error.value = e.toString();
+    }
   }
 
   /// 获取块数据
   Future<void> fetchBlockData() async {
-    final List data = await AssetData.getBlockData(Data.blockUrl); // 获取数据
-    blockData.value = data; // 更新数据
+    try {
+      error.value = ''; // 清空之前的错误
+      
+      // 如果是管理员，获取当前选中的部门 ID
+      int? deptId;
+      if (isAdmin.value) {
+        deptId = _homeStateController.selectedDeptId.value;
+      }
+      
+      final List data = await AssetData.getBlockData(Data.blockUrl, deptId: deptId); // 获取数据
+      blockData.value = data; // 更新数据
+    } catch (e) {
+      // 捕获并记录错误
+      error.value = e.toString();
+    }
   }
 
   @override
