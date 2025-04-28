@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
           vertical: MediaQuery.of(context).padding.top,
         ),
         children: [
-          // 管理员面板入口 - 只有管理员可见
+          // 管理员面板 - 只有管理员可见
           Obx(() => _homeStateController.isAdmin.value
               ? Container(
                   margin: const EdgeInsets.only(bottom: 15),
@@ -40,30 +40,83 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _homeStateController.openAdminPanel,
-                      borderRadius: BorderRadius.circular(10),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        child: Row(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 标题
+                        Row(
                           children: [
                             Icon(Icons.admin_panel_settings, color: Colors.blue.shade700),
                             const SizedBox(width: 10),
                             Text(
                               '管理员面板',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blue.shade700,
                               ),
                             ),
-                            const Spacer(),
-                            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue.shade700),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        // 部门选择
+                        Text(
+                          '部门选择',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // 部门列表
+                        Obx(() {
+                          if (_homeStateController.deptList.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Text('加载部门列表...'),
+                              ),
+                            );
+                          }
+                          
+                          final deptList = _homeStateController.deptList;
+                          
+                          return Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: deptList.map((dept) {
+                              final int deptId = dept['deptId'];
+                              final String deptName = dept['deptName'] ?? '';
+                              final bool isSelected = _homeStateController.selectedDeptId.value == deptId;
+                              
+                              return InkWell(
+                                onTap: () => _homeStateController.selectDept(deptId),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? Colors.blue.shade700 : Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    deptName,
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : Colors.grey.shade800,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        }),
+                      ],
                     ),
                   ),
                 )

@@ -22,10 +22,19 @@ class SaveData{
     return prefs.getString('login_token');
   }
 
-  // 删除用户token
+  // 删除用户所有数据，但保留用户名以方便下次登录
   static Future<void> logout() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('login_token');  // 删除登录token
+    // 删除登录token
+    await prefs.remove('login_token');
+    // 注意：不删除用户信息（user_info），以保留用户名方便下次登录
+    // await prefs.remove('user_info');
+    // 删除用户角色ID
+    await prefs.remove('user_role_id');
+    // 删除用户部门ID
+    await prefs.remove('user_dept_id');
+    // 删除选中的部门ID
+    await prefs.remove('selected_dept_id');
   }
 
   // 保存用户信息
@@ -56,5 +65,35 @@ class SaveData{
   static Future<bool> isAdmin() async {
     final int roleId = await getUserRole();
     return roleId == 1; // roleId为1表示系统管理员
+  }
+  
+  // 保存用户部门ID
+  static Future<void> saveUserDeptId(int deptId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_dept_id', deptId);
+  }
+  
+  // 获取用户部门ID
+  static Future<int?> getUserDeptId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('user_dept_id');
+  }
+  
+  // 保存选中的部门ID
+  static Future<void> saveSelectedDeptId(int deptId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('selected_dept_id', deptId);
+  }
+  
+  // 获取选中的部门ID
+  static Future<int?> getSelectedDeptId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('selected_dept_id');
+  }
+  
+  // 清除选中的部门ID
+  static Future<void> clearSelectedDeptId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('selected_dept_id');
   }
 }

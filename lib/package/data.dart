@@ -16,4 +16,6 @@ class Data {
   static String nodeBlockUrl = 'http://116.92.243.5:8000/api/v1/block';
   static String sectorUrl = 'http://116.92.243.5:8000/api/v1/nodes-app/sectors';
   static String getUserInfoUrl = 'http://116.92.243.5:8000/api/v1/user/getuser';
+  // API 文档中显示的地址是 192.168.103.106:8000，但我们使用与其他 API 相同的基础 URL
+  static String deptListUrl = 'http://116.92.243.5:8000/api/v1/dept/list';
 }

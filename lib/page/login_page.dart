@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                           height: 45,
                         ),
                         const Text(
-                          'ilsLink',
+                          'ilCloud',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 30,

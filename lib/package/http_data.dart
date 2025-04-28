@@ -49,14 +49,23 @@ class HttpData {
       // 保存用户信息
       await SaveData.saveUserInfo(username);
       
-      // 如果登录响应中包含用户角色信息，直接保存
+      // 如果登录响应中包含用户信息，直接保存
       if (jsonData['data'] != null && jsonData['data']['user'] != null) {
         final userData = jsonData['data']['user'];
+        
+        // 保存用户角色ID
         if (userData['roleId'] != null) {
           await SaveData.saveUserRole(userData['roleId']);
         }
+        
+        // 保存用户部门ID
+        if (userData['deptId'] != null) {
+          await SaveData.saveUserDeptId(userData['deptId']);
+          // 清除上次选择的部门ID，确保重新登录时使用用户的默认部门
+          await SaveData.clearSelectedDeptId();
+        }
       } else {
-        // 如果登录响应中没有用户角色信息，则调用单独的API获取
+        // 如果登录响应中没有用户信息，则调用单独的API获取
         await getUserInfo();
       }
 
@@ -118,9 +127,48 @@ class HttpData {
           // 保存用户角色ID
           await SaveData.saveUserRole(userData['roleId']);
         }
+        
+        // 检查是否包含deptId字段
+        if (userData['deptId'] != null) {
+          // 保存用户部门ID
+          await SaveData.saveUserDeptId(userData['deptId']);
+          // 清除上次选择的部门ID，确保重新登录时使用用户的默认部门
+          await SaveData.clearSelectedDeptId();
+        }
       }
     } catch (e) {
       print('获取用户信息失败: $e');
+    }
+  }
+  
+  // 获取部门列表
+  static Future<List<Map<String, dynamic>>> getDeptList() async {
+    try {
+      // 获取token
+      String? token = await SaveData.getLoginData();
+      if (token == null) {
+        return [];
+      }
+      final response = await http.get(
+        Uri.parse(Data.deptListUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      // 转换为json格式
+      final jsonData = jsonDecode(response.body);
+      
+      if (jsonData['code'] == 200 && jsonData['data'] != null) {
+        // 返回部门列表
+        return List<Map<String, dynamic>>.from(jsonData['data']);
+      }
+      
+      return [];
+    } catch (e) {
+      print('获取部门列表失败: $e');
+      return [];
     }
   }
   
