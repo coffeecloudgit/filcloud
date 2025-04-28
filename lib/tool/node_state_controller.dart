@@ -30,9 +30,6 @@ class NodeStateController extends GetxController {
     
     // 注册事件监听器，监听部门变化事件
     ever(Get.find<HomeStateController>().selectedDeptId, (deptId) {
-      // 打印调试信息，部门变化
-      print('[调试] NodeStateController: 部门变化事件触发，新部门ID = $deptId');
-      
       // 直接使用事件中的 deptId 值，而不是从 SaveData 中获取
       // 部门变化时刷新数据
       fetchTotalNodeData(deptId: deptId);
@@ -58,7 +55,6 @@ class NodeStateController extends GetxController {
     _timer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       // 获取当前选中的部门 ID，使用 HomeStateController 中的值
       final deptId = Get.find<HomeStateController>().selectedDeptId.value;
-      print('[调试] NodeStateController: 定时器触发，当前部门ID = $deptId');
       
       fetchTotalNodeData(deptId: deptId); // 获取总节点数据
       if (currentIndex == 0) {
@@ -78,16 +74,11 @@ class NodeStateController extends GetxController {
       deptId = homeController.selectedDeptId.value;
     }
     
-    // 打印调试信息，获取总节点数据
-    print('[调试] NodeStateController: 获取总节点数据，deptId = $deptId');
-    
     // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
     if (!isAdmin.value || deptId == 1) {
       deptId = null;
     }
     
-    // 打印调试信息，实际调用 API 时使用的 deptId
-    print('[调试] NodeStateController: 实际调用总节点数据 API，deptId = $deptId');
     final Map data = await NodeData.getTotalNodeData(Data.totalNodeUrl, deptId: deptId); // 获取数据
     totalNodeData.value = data; // 更新数据
   }
@@ -101,16 +92,11 @@ class NodeStateController extends GetxController {
       deptId = homeController.selectedDeptId.value;
     }
     
-    // 打印调试信息，获取节点数据
-    print('[调试] NodeStateController: 获取节点数据，deptId = $deptId');
-    
     // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
     if (!isAdmin.value || deptId == 1) {
       deptId = null;
     }
     
-    // 打印调试信息，实际调用 API 时使用的 deptId
-    print('[调试] NodeStateController: 实际调用节点数据 API，deptId = $deptId');
     final List data = await NodeData.getNodeData(Data.nodeUrl, deptId: deptId); // 获取数据
     nodeData.value = data; // 更新数据
   }

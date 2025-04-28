@@ -48,7 +48,8 @@ class _HomePageState extends State<HomePage> {
                         // 标题
                         Row(
                           children: [
-                            Icon(Icons.admin_panel_settings, color: Colors.blue.shade700),
+                            Icon(Icons.admin_panel_settings,
+                                color: Colors.blue.shade700),
                             const SizedBox(width: 10),
                             Text(
                               '管理员面板',
@@ -81,34 +82,46 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           }
-                          
+
                           final deptList = _homeStateController.deptList;
-                          
+
                           return Wrap(
                             spacing: 10,
                             runSpacing: 10,
                             children: deptList.map((dept) {
                               final int deptId = dept['deptId'];
                               final String deptName = dept['deptName'] ?? '';
-                              final bool isSelected = _homeStateController.selectedDeptId.value == deptId;
-                              
+                              final bool isSelected =
+                                  _homeStateController.selectedDeptId.value ==
+                                      deptId;
+
                               return InkWell(
-                                onTap: () => _homeStateController.selectDept(deptId),
+                                onTap: () =>
+                                    _homeStateController.selectDept(deptId),
                                 borderRadius: BorderRadius.circular(20),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: isSelected ? Colors.blue.shade700 : Colors.white,
+                                    color: isSelected
+                                        ? Colors.blue.shade700
+                                        : Colors.white,
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                                      color: isSelected
+                                          ? Colors.blue.shade700
+                                          : Colors.grey.shade300,
                                     ),
                                   ),
                                   child: Text(
                                     deptName,
                                     style: TextStyle(
-                                      color: isSelected ? Colors.white : Colors.grey.shade800,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.grey.shade800,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
                                     ),
                                   ),
                                 ),
@@ -191,14 +204,15 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             const SizedBox(width: 20),
-                            Text(
-                              _homeStateController.homeData['qualityAdjPower'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            Obx(() => Text(
+                                  _homeStateController
+                                      .homeData['qualityAdjPower'],
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )),
                             const SizedBox(width: 10),
                             const Text(
                               'PiB',
@@ -234,13 +248,13 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 const SizedBox(width: 5),
-                                Text(
-                                  '节点数：${_homeStateController.homeData['nodesCount']}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                                Obx(() => Text(
+                                      '节点数：${_homeStateController.homeData['nodesCount']}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    )),
                               ],
                             ),
                           ),
@@ -321,20 +335,16 @@ class _HomePageState extends State<HomePage> {
                                 builder: (context) {
                                   return Obx(
                                     () {
-                                      if(_homeStateController.error.value.isNotEmpty) {
-                                        return const Center(child: CircularProgressIndicator());
-                                      } else {
-                                        return Text(
-                                          _homeStateController
-                                              .filPrice['newlyPrice']
-                                              .toStringAsFixed(2),
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        );
-                                      }
+                                      return Text(
+                                        _homeStateController
+                                            .filPrice['newlyPrice']
+                                            .toStringAsFixed(2),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
                                     },
                                   );
                                 }),
@@ -401,75 +411,71 @@ class _HomePageState extends State<HomePage> {
                             builder: (context) {
                               return Obx(
                                 () {
-                                  if(_homeStateController.error.value.isNotEmpty) {
-                                    return const Center(child: CircularProgressIndicator());
-                                  } else {
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            _homeStateController.filPrice[
-                                            'percentChange'] >
-                                                0 ||
-                                                _homeStateController.filPrice[
-                                                'percentChange'] ==
-                                                    0
-                                                ? Transform.rotate(
-                                              angle: 3.14159,
-                                              child: SvgPicture.asset(
-                                                'assets/icons/home_5.svg',
-                                                colorFilter:
-                                                const ColorFilter.mode(
-                                                    Color(0xff59df5a),
-                                                    BlendMode.srcIn),
-                                                width: 25,
-                                                height: 25,
-                                              ),
-                                            )
-                                                : SvgPicture.asset(
-                                              'assets/icons/home_5.svg',
-                                              colorFilter:
-                                              const ColorFilter.mode(
-                                                  Color(0xffEB4E3D),
-                                                  BlendMode.srcIn),
-                                              width: 25,
-                                              height: 25,
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          _homeStateController.filPrice[
+                                                          'percentChange'] >
+                                                      0 ||
+                                                  _homeStateController.filPrice[
+                                                          'percentChange'] ==
+                                                      0
+                                              ? Transform.rotate(
+                                                  angle: 3.14159,
+                                                  child: SvgPicture.asset(
+                                                    'assets/icons/home_5.svg',
+                                                    colorFilter:
+                                                        const ColorFilter.mode(
+                                                            Color(0xff59df5a),
+                                                            BlendMode.srcIn),
+                                                    width: 25,
+                                                    height: 25,
+                                                  ),
+                                                )
+                                              : SvgPicture.asset(
+                                                  'assets/icons/home_5.svg',
+                                                  colorFilter:
+                                                      const ColorFilter.mode(
+                                                          Color(0xffEB4E3D),
+                                                          BlendMode.srcIn),
+                                                  width: 25,
+                                                  height: 25,
+                                                ),
+                                          Text(
+                                            _homeStateController
+                                                .filPrice['percentChange']
+                                                .toString(),
+                                            maxLines: 2,
+                                            style: TextStyle(
+                                              color: _homeStateController
+                                                                  .filPrice[
+                                                              'percentChange'] >
+                                                          0 ||
+                                                      _homeStateController
+                                                                  .filPrice[
+                                                              'percentChange'] ==
+                                                          0
+                                                  ? const Color(0xff59df5a)
+                                                  : const Color(0xffEB4E3D),
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            Text(
-                                              _homeStateController
-                                                  .filPrice['percentChange']
-                                                  .toString(),
-                                              maxLines: 2,
-                                              style: TextStyle(
-                                                color: _homeStateController
-                                                    .filPrice[
-                                                'percentChange'] >
-                                                    0 ||
-                                                    _homeStateController
-                                                        .filPrice[
-                                                    'percentChange'] ==
-                                                        0
-                                                    ? const Color(0xff59df5a)
-                                                    : const Color(0xffEB4E3D),
-                                                fontSize: 28,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          '%',
-                                          style: TextStyle(
-                                            color: Color(0xffACACAC),
-                                            fontSize: 15,
                                           ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        '%',
+                                        style: TextStyle(
+                                          color: Color(0xffACACAC),
+                                          fontSize: 15,
                                         ),
-                                      ],
-                                    );
-                                  }
+                                      ),
+                                    ],
+                                  );
                                 },
                               );
                             }),
@@ -535,23 +541,17 @@ class _HomePageState extends State<HomePage> {
                             VoidFutureBuilder(
                                 future: _homeStateController.fetchFilPrice(),
                                 builder: (context) {
-                                  return Obx(
-                                    () {
-                                      if(_homeStateController.error.value.isNotEmpty) {
-                                        return const Center(child: CircularProgressIndicator());
-                                      } else {
-                                        return Text(
-                                          _homeStateController.filPrice['cnyRate']
-                                              .toStringAsFixed(2),
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  );
+                                  return Obx(() {
+                                    return Text(
+                                      _homeStateController.filPrice['cnyRate']
+                                          .toStringAsFixed(2),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    );
+                                  });
                                 }),
                             const SizedBox(width: 8),
                             const Text(
@@ -663,168 +663,168 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            height: 350,
-            padding: const EdgeInsets.only(
-              left: 0,
-              right: 20,
-              top: 10,
-              bottom: 20,
-            ),
-            child: VoidFutureBuilder(
-              future: _homeStateController.fetchCaptchaData(),
-              builder: (context) {
-                RxList dataX = [].obs;
-                RxList dataY = [].obs;
-                RxDouble maxY = 0.0.obs;
+          Obx(() => Container(
+                width: double.infinity,
+                height: 350,
+                padding: const EdgeInsets.only(
+                  left: 0,
+                  right: 20,
+                  top: 10,
+                  bottom: 20,
+                ),
+                child: VoidFutureBuilder(
+                  future: _homeStateController.fetchCaptchaData(),
+                  builder: (context) {
+                    RxList dataX = [].obs;
+                    RxList dataY = [].obs;
+                    RxDouble maxY = 0.0.obs;
 
-                for (var element in _homeStateController.captchaData) {
-                  dataX.add(element['x']); // 字符串
-                  dataY.add(element['y'].toDouble());
-                }
+                    for (var element in _homeStateController.captchaData) {
+                      dataX.add(element['x']); // 字符串
+                      dataY.add(element['y'].toDouble());
+                    }
 
-                // dataY 的最大值
-                maxY.value = dataY.reduce((value, element) {
-                  return value > element ? value : element;
-                });
+                    // dataY 的最大值
+                    maxY.value = dataY.reduce((value, element) {
+                      return value > element ? value : element;
+                    });
 
-                return LineChart(
-                  LineChartData(
-                    gridData: FlGridData(
-                      verticalInterval: 6,
-                      getDrawingVerticalLine: (value) {
-                        return const FlLine(
-                          color: Color(0xffE1E1E1),
-                          strokeWidth: 0.5,
-                        );
-                      },
-                      horizontalInterval: 25,
-                      getDrawingHorizontalLine: (value) {
-                        return const FlLine(
-                          color: Color(0xffE1E1E1),
-                          strokeWidth: 0.5,
-                        );
-                      },
-                    ),
-                    titlesData: FlTitlesData(
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          interval: 6,
-                          getTitlesWidget: (double value, TitleMeta meta) {
-                            Widget text = Text(dataX[value.toInt()],
-                                style: const TextStyle(
-                                    color: Colors.black,
+                    return LineChart(
+                      LineChartData(
+                        gridData: FlGridData(
+                          verticalInterval: 6,
+                          getDrawingVerticalLine: (value) {
+                            return const FlLine(
+                              color: Color(0xffE1E1E1),
+                              strokeWidth: 0.5,
+                            );
+                          },
+                          horizontalInterval: 25,
+                          getDrawingHorizontalLine: (value) {
+                            return const FlLine(
+                              color: Color(0xffE1E1E1),
+                              strokeWidth: 0.5,
+                            );
+                          },
+                        ),
+                        titlesData: FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 6,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                Widget text = Text(dataX[value.toInt()],
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14));
+
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide, // 轴线的位置
+                                  space: 16, // 调整标题与条形图的间隙
+                                  child: text,
+                                );
+                              },
+                              reservedSize: 40,
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              reservedSize: 40,
+                              interval: 25,
+                              showTitles: true,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  space: 10,
+                                  child: Text(
+                                    meta.formattedValue,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: false,
+                            ),
+                          ),
+                          topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        borderData: FlBorderData(
+                          show: true,
+                          border: const Border(
+                            bottom: BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
+                            left: BorderSide(
+                              color: Color(0xffE1E1E1),
+                              width: 0.5,
+                            ),
+                            top: BorderSide(
+                              color: Color(0xffE1E1E1),
+                              width: 0.5,
+                            ),
+                          ),
+                        ),
+                        minY: 0,
+                        maxY: (maxY / 25).ceil() * 25 + 25,
+                        lineTouchData: LineTouchData(
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipColor: (spot) => Colors.transparent,
+                            getTooltipItems: (List<LineBarSpot> lineBarsSpot) {
+                              return lineBarsSpot.map((lineBarSpot) {
+                                // 时间
+                                final time = dataX[lineBarSpot.x.toInt()];
+
+                                return LineTooltipItem(
+                                  '$time\n${lineBarSpot.y.toStringAsFixed(2)}',
+                                  const TextStyle(
+                                    color: Color(0xff5594F1),
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14));
-
-                            return SideTitleWidget(
-                              axisSide: meta.axisSide, // 轴线的位置
-                              space: 16, // 调整标题与条形图的间隙
-                              child: text,
-                            );
-                          },
-                          reservedSize: 40,
+                                  ),
+                                );
+                              }).toList();
+                            },
+                          ),
                         ),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: dataY
+                                .asMap()
+                                .entries
+                                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                .toList(),
+                            isCurved: true,
+                            color: const Color(0xff63B6F6),
+                            barWidth: 2,
+                            isStrokeCapRound: true,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(
+                                show: true,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xffAFD2FC).withOpacity(0.6),
+                                    const Color(0xffAFD2FC).withOpacity(0.1),
+                                    Colors.transparent,
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                )),
+                          ),
+                        ],
                       ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          reservedSize: 40,
-                          interval: 25,
-                          showTitles: true,
-                          getTitlesWidget: (double value, TitleMeta meta) {
-                            return SideTitleWidget(
-                              axisSide: meta.axisSide,
-                              space: 10,
-                              child: Text(
-                                meta.formattedValue,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: false,
-                        ),
-                      ),
-                      topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: const Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 1,
-                        ),
-                        left: BorderSide(
-                          color: Color(0xffE1E1E1),
-                          width: 0.5,
-                        ),
-                        top: BorderSide(
-                          color: Color(0xffE1E1E1),
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    minY: 0,
-                    maxY: (maxY / 25).ceil() * 25 + 25,
-                    lineTouchData: LineTouchData(
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (spot) => Colors.transparent,
-                        getTooltipItems: (List<LineBarSpot> lineBarsSpot) {
-                          return lineBarsSpot.map((lineBarSpot) {
-                            // 时间
-                            final time = dataX[lineBarSpot.x.toInt()];
-
-                            return LineTooltipItem(
-                              '$time\n${lineBarSpot.y.toStringAsFixed(2)}',
-                              const TextStyle(
-                                color: Color(0xff5594F1),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          }).toList();
-                        },
-                      ),
-                    ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: dataY
-                            .asMap()
-                            .entries
-                            .map((e) => FlSpot(e.key.toDouble(), e.value))
-                            .toList(),
-                        isCurved: true,
-                        color: const Color(0xff63B6F6),
-                        barWidth: 2,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xffAFD2FC).withOpacity(0.6),
-                                const Color(0xffAFD2FC).withOpacity(0.1),
-                                Colors.transparent,
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            )),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+                    );
+                  },
+                ),
+              )),
         ]);
   }
 }
