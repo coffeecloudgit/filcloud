@@ -44,10 +44,21 @@ class HttpData {
       // 登录成功，处理返回的数据
 
       // 保存token
-      SaveData.saveLoginData(jsonData['token']);
+      await SaveData.saveLoginData(jsonData['token']);
 
       // 保存用户信息
-      SaveData.saveUserInfo(username);
+      await SaveData.saveUserInfo(username);
+      
+      // 如果登录响应中包含用户角色信息，直接保存
+      if (jsonData['data'] != null && jsonData['data']['user'] != null) {
+        final userData = jsonData['data']['user'];
+        if (userData['roleId'] != null) {
+          await SaveData.saveUserRole(userData['roleId']);
+        }
+      } else {
+        // 如果登录响应中没有用户角色信息，则调用单独的API获取
+        await getUserInfo();
+      }
 
       return true;
     } else {
@@ -78,6 +89,41 @@ class HttpData {
     }
   }
 
+  // 获取用户详细信息
+  static Future<void> getUserInfo() async {
+    try {
+      // 获取token
+      String? token = await SaveData.getLoginData();
+      
+      if (token == null) {
+        return;
+      }
+      
+      final response = await http.get(
+        Uri.parse(Data.getUserInfoUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      // 转换为json格式
+      final jsonData = jsonDecode(response.body);
+      
+      if (jsonData['code'] == 200 && jsonData['data'] != null && jsonData['data']['user'] != null) {
+        final userData = jsonData['data']['user'];
+        
+        // 检查是否包含roleId字段
+        if (userData['roleId'] != null) {
+          // 保存用户角色ID
+          await SaveData.saveUserRole(userData['roleId']);
+        }
+      }
+    } catch (e) {
+      print('获取用户信息失败: $e');
+    }
+  }
+  
   // 退出登录
   static Future<bool> logout(String url) async {
     // 获取token

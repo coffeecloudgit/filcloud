@@ -24,6 +24,50 @@ class _HomePageState extends State<HomePage> {
           vertical: MediaQuery.of(context).padding.top,
         ),
         children: [
+          // 管理员面板入口 - 只有管理员可见
+          Obx(() => _homeStateController.isAdmin.value
+              ? Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _homeStateController.openAdminPanel,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.admin_panel_settings, color: Colors.blue.shade700),
+                            const SizedBox(width: 10),
+                            Text(
+                              '管理员面板',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue.shade700),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink()),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: Text(

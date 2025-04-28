@@ -39,4 +39,22 @@ class SaveData{
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_info');
   }
+  
+  // 保存用户角色ID
+  static Future<void> saveUserRole(int roleId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_role_id', roleId);
+  }
+  
+  // 获取用户角色ID
+  static Future<int> getUserRole() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('user_role_id') ?? 0; // 默认返回0，表示非管理员
+  }
+  
+  // 检查用户是否是管理员
+  static Future<bool> isAdmin() async {
+    final int roleId = await getUserRole();
+    return roleId == 1; // roleId为1表示系统管理员
+  }
 }
