@@ -1,6 +1,7 @@
 import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:fils_link/tool/void_future_builder.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -24,116 +25,122 @@ class _HomePageState extends State<HomePage> {
           vertical: MediaQuery.of(context).padding.top,
         ),
         children: [
+          Obx(() => _homeStateController.isAdmin.value
+              ? const Padding(
+            padding: EdgeInsets.only(
+              left: 8,
+              bottom: 10,
+              right: 8,
+            ),
+            child: Text(
+              '高级管理',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          )
+              : const SizedBox.shrink()),
           // 管理员面板 - 只有管理员可见
           Obx(() => _homeStateController.isAdmin.value
               ? Container(
-                  margin: const EdgeInsets.only(bottom: 15),
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 30),
+                  padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                          ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    color: const Color(0xFFF1F1F6),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
+                  child: Obx(() {
+                    if (_homeStateController.deptList.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final deptList = _homeStateController.deptList;
+                    final selectedDeptId = _homeStateController.selectedDeptId.value;
+
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 标题
-                        Row(
-                          children: [
-                            Icon(Icons.admin_panel_settings,
-                                color: Colors.blue.shade700),
-                            const SizedBox(width: 10),
-                            Text(
-                              '管理员面板',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade700,
+                        // 部门选择标题行
+                        // const Row(
+                        //   mainAxisAlignment: MainAxisAlignment.center,
+                        //   children: [
+                        //     Icon(
+                        //       Icons.business_center,
+                        //       color: Color(0xFF4677EF),
+                        //       size: 18,
+                        //     ),
+                        //     SizedBox(width: 8),
+                        //     Text(
+                        //       '部门选择',
+                        //       style: TextStyle(
+                        //         fontSize: 17,
+                        //         fontWeight: FontWeight.w700,
+                        //         color: Colors.black,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // const SizedBox(height: 4),
+                        // 部门列表
+                        ...deptList.asMap().entries.map((entry) {
+                          final int index = entry.key;
+                          final dept = entry.value;
+                          final int deptId = dept['deptId'];
+                          final String deptName = dept['deptName'] ?? '';
+
+                          return InkWell(
+                            onTap: () => _homeStateController.selectDept(deptId),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                border: index < deptList.length - 1
+                                    ? Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade300,
+                                          width: 0.5,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      deptName,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  // 真正的 iOS 风格开关
+                                  CupertinoSwitch(
+                                    value: selectedDeptId == deptId,
+                                    onChanged: (value) {
+                                      if (value) {
+                                        _homeStateController.selectDept(deptId);
+                                      }
+                                    },
+                                    activeColor: Colors.blue,
+                                    // 不需要设置边框，CupertinoSwitch 默认就没有边框
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // 部门选择
-                        Text(
-                          '部门选择',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // 部门列表
-                        Obx(() {
-                          if (_homeStateController.deptList.isEmpty) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10),
-                                child: Text('加载部门列表...'),
-                              ),
-                            );
-                          }
-
-                          final deptList = _homeStateController.deptList;
-
-                          return Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: deptList.map((dept) {
-                              final int deptId = dept['deptId'];
-                              final String deptName = dept['deptName'] ?? '';
-                              final bool isSelected =
-                                  _homeStateController.selectedDeptId.value ==
-                                      deptId;
-
-                              return InkWell(
-                                onTap: () =>
-                                    _homeStateController.selectDept(deptId),
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.blue.shade700
-                                        : Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? Colors.blue.shade700
-                                          : Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    deptName,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.grey.shade800,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
                           );
-                        }),
+                        }).toList(),
                       ],
-                    ),
-                  ),
+                    );
+                  }),
                 )
               : const SizedBox.shrink()),
+              // 结束
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: Text(

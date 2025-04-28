@@ -53,6 +53,7 @@ class _SettingPageState extends State<SettingPage> {
             bottom: MediaQuery.of(context).padding.bottom + 20),
         children: [
           InkWell(
+            borderRadius: BorderRadius.circular(20),
             onTap: () {
               // 向远程服务器请求退出登录
               HttpData.logout(Data.logoutUrl).then((value) {

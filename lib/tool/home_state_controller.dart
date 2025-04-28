@@ -195,7 +195,7 @@ class HomeStateController extends GetxController {
       if (!hasDefaultDept) {
         data.insert(0, {
           'deptId': 1,
-          'deptName': '默认部门',
+          'deptName': '默认',
           'parentId': 0,
           'status': 2
         });

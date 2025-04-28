@@ -63,6 +63,8 @@ class HttpData {
           await SaveData.saveUserDeptId(userData['deptId']);
           // 清除上次选择的部门ID，确保重新登录时使用用户的默认部门
           await SaveData.clearSelectedDeptId();
+
+          print(userData['deptId']);
         }
       } else {
         // 如果登录响应中没有用户信息，则调用单独的API获取

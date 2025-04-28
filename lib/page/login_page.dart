@@ -205,49 +205,55 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     const SizedBox(height: 40),
-                    InkWell(
-                      onTap: () async {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          if (await HttpData.loginUser(
-                            _username!,
-                            _password!,
-                            _verify!,
-                            deUuid,
-                            Data.url,
-                          )) {
-                            // 启用推送功能
-                            PushNotificationService.loginUser();
-                            Get.offAll(() => const Start());
-                          } else {
-                            _passwordController.clear();
-                            _verifyController.clear();
-                            // 刷新验证码
-                            setState(() {
-                              _captchaFuture = HttpData.verify();
-                            });
-                            Get.snackbar('提示', '登录失败');
-                          }
-                        }
-                      },
-                      child: Container(
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '登录',
-                            style: TextStyle(
-                              color: Color(0xff005FEB),
-                              fontSize: 22,
-                              fontWeight: FontWeight.w400,
+                    Container(
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          splashFactory: NoSplash.splashFactory,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            if (_formKey.currentState!.validate()) {
+                              _formKey.currentState!.save();
+                              if (await HttpData.loginUser(
+                                _username!,
+                                _password!,
+                                _verify!,
+                                deUuid,
+                                Data.url,
+                              )) {
+                                // 启用推送功能
+                                PushNotificationService.loginUser();
+                                Get.offAll(() => const Start());
+                              } else {
+                                _passwordController.clear();
+                                _verifyController.clear();
+                                // 刷新验证码
+                                setState(() {
+                                  _captchaFuture = HttpData.verify();
+                                });
+                                Get.snackbar('提示', '登录失败');
+                              }
+                            }
+                          },
+                          child: const Center(
+                            child: Text(
+                              '登录',
+                              style: TextStyle(
+                                color: Color(0xff005FEB),
+                                fontSize: 22,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ))
           ],
