@@ -27,11 +27,11 @@ class HomeStateController extends GetxController {
   Timer? _timer;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
 
     // 只在应用启动时从 SaveData 读取数据
-    _loadInitialData(); // 加载初始数据
+    await _loadInitialData(); // 加载初始数据
     
     // 注册事件监听器，监听部门变化事件
     ever(selectedDeptId, (deptId) {
@@ -39,6 +39,9 @@ class HomeStateController extends GetxController {
       if (deptId != null) {
         fetchHomeData();
         fetchCaptchaData();
+        
+        // 注意：不在这里保存部门ID，因为 selectDept 方法中已经保存了
+        // 避免重复保存导致的问题
       }
     });
     
@@ -49,8 +52,11 @@ class HomeStateController extends GetxController {
   Future<void> _loadInitialData() async {
     // 获取初始数据
     await _loadAdminData(); // 加载管理员数据
-    fetchHomeData(); // 获取首页数据
-    fetchCaptchaData(); // 获取图表数据
+    
+    // 确保在加载完管理员数据和部门列表后，再获取首页数据
+    // 这样可以确保使用正确的部门ID获取数据
+    await fetchHomeData(); // 获取首页数据
+    await fetchCaptchaData(); // 获取图表数据
   }
   
   /// 加载管理员数据，只在应用启动时调用一次
@@ -64,8 +70,14 @@ class HomeStateController extends GetxController {
         // 如果是管理员，加载部门相关数据
         await fetchDeptList(); // 获取部门列表
         
-        // 从 SaveData 中加载部门 ID，只在应用启动时调用一次
-        await _loadDeptIdFromStorage();
+        // 确保部门列表已经加载完成
+        if (deptList.isNotEmpty) {
+          // 从 SaveData 中加载部门 ID，只在应用启动时调用一次
+          await _loadDeptIdFromStorage();
+        } else {
+          // 如果部门列表为空，设置默认部门ID
+          selectedDeptId.value = 1; // 默认部门ID为1
+        }
       }
     } catch (e) {
       print('加载管理员数据失败: $e');
@@ -75,27 +87,44 @@ class HomeStateController extends GetxController {
   /// 从存储中加载部门 ID，只在应用启动时调用一次
   Future<void> _loadDeptIdFromStorage() async {
     try {
+      // 确保部门列表已经加载
+      if (deptList.isEmpty) {
+        return;
+      }
+      
       // 优先使用用户的部门ID
       final int? userDeptId = await SaveData.getUserDeptId();
       
       if (userDeptId != null) {
-        // 如果有用户部门ID，使用它
-        selectedDeptId.value = userDeptId;
-      } else {
-            // 如果没有用户部门ID，尝试使用上次选择的部门ID
-        final int? savedDeptId = await SaveData.getSelectedDeptId();
+        // 验证用户部门ID是否在当前部门列表中
+        bool userDeptExists = deptList.any((dept) => dept['deptId'] == userDeptId);
         
-        if (savedDeptId != null) {
-          // 如果有上次选择的部门ID，使用它
-          selectedDeptId.value = savedDeptId;
-        } else if (deptList.isNotEmpty) {
-          // 如果没有上次选择的部门ID但有部门列表，选择第一个部门
-          final firstDeptId = deptList[0]['deptId'];
-          selectedDeptId.value = firstDeptId;
-          // 保存到存储中，但在应用运行期间不再从存储中读取
-          await SaveData.saveSelectedDeptId(firstDeptId);
+        if (userDeptExists) {
+          // 如果用户部门ID在当前部门列表中，使用它
+          selectedDeptId.value = userDeptId;
+          return;
         }
       }
+      
+      // 如果没有有效的用户部门ID，尝试使用上次选择的部门ID
+      final int? savedDeptId = await SaveData.getSelectedDeptId();
+      
+      if (savedDeptId != null) {
+        // 验证保存的部门ID是否在当前部门列表中
+        bool savedDeptExists = deptList.any((dept) => dept['deptId'] == savedDeptId);
+        
+        if (savedDeptExists) {
+          // 如果保存的部门ID在当前部门列表中，使用它
+          selectedDeptId.value = savedDeptId;
+          return;
+        }
+      }
+      
+      // 如果没有有效的保存部门ID，使用第一个部门
+      final firstDeptId = deptList[0]['deptId'];
+      selectedDeptId.value = firstDeptId;
+      // 保存新选择的部门ID
+      await SaveData.saveSelectedDeptId(firstDeptId);
     } catch (e) {
       print('从存储中加载部门ID失败: $e');
     }
@@ -201,7 +230,11 @@ class HomeStateController extends GetxController {
         });
       }
       
+      // 更新部门列表
       deptList.value = data;
+      
+      // 在这里不需要手动处理部门ID
+      // _loadDeptIdFromStorage 方法会在初始化时处理部门ID的恢复
     } catch (e) {
       print('获取部门列表失败: $e');
     }

@@ -22,15 +22,46 @@ class NodeStateController extends GetxController {
   NodeStateController({required this.currentIndex});
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     
-    // 检查是否为管理员
-    _checkAdminStatus();
+    // 检查是否为管理员 - 使用 await 确保在继续之前完成
+    await _checkAdminStatus();
+    
+    // 获取初始部门ID
+    int? initialDeptId;
+    
+    if (isAdmin.value) {
+      // 如果是管理员，尝试获取保存的部门ID
+      final savedDeptId = await SaveData.getSelectedDeptId();
+      
+      if (savedDeptId != null) {
+        // 如果有保存的部门ID，使用它
+        initialDeptId = savedDeptId;
+        
+        // 同步到 HomeStateController
+        final homeController = Get.find<HomeStateController>();
+        // 只有当当前选中的部门ID与保存的不同时才更新
+        if (homeController.selectedDeptId.value != savedDeptId) {
+          homeController.selectedDeptId.value = savedDeptId;
+        }
+      } else {
+        // 如果没有保存的部门ID，使用 HomeStateController 中的值
+        initialDeptId = Get.find<HomeStateController>().selectedDeptId.value;
+      }
+    }
+    
+    // 使用正确的部门ID初始化数据
+    await fetchTotalNodeData(deptId: initialDeptId);
+    if (currentIndex == 0) {
+      await fetchNodeData(deptId: initialDeptId);
+    } else {
+      await fetchNodeBlockData();
+    }
     
     // 注册事件监听器，监听部门变化事件
     ever(Get.find<HomeStateController>().selectedDeptId, (deptId) {
-      // 直接使用事件中的 deptId 值，而不是从 SaveData 中获取
+      // 直接使用事件中的 deptId 值
       // 部门变化时刷新数据
       fetchTotalNodeData(deptId: deptId);
       if (currentIndex == 0) {
@@ -47,6 +78,7 @@ class NodeStateController extends GetxController {
   Future<void> _checkAdminStatus() async {
     final roleId = await SaveData.getUserRole();
     isAdmin.value = (roleId == 1); // 假设角色ID为1的是管理员
+    return; // 显式返回，确保方法完成
   }
 
   /// 启动定时器

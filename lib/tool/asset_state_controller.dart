@@ -20,22 +20,44 @@ class AssetStateController extends GetxController {
   final HomeStateController _homeStateController = Get.find<HomeStateController>();
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     
-    // 检查管理员状态
-    _checkAdminStatus();
+    // 检查管理员状态 - 使用 await 确保在继续之前完成
+    await _checkAdminStatus();
     
-    // 获取初始数据
-    fetchAssetData();
-    fetchBlockData();
+    // 获取初始部门ID
+    int? initialDeptId;
+    
+    if (isAdmin.value) {
+      // 如果是管理员，尝试获取保存的部门ID
+      final savedDeptId = await SaveData.getSelectedDeptId();
+      
+      if (savedDeptId != null) {
+        // 如果有保存的部门ID，使用它
+        initialDeptId = savedDeptId;
+        
+        // 同步到 HomeStateController
+        // 只有当当前选中的部门ID与保存的不同时才更新
+        if (_homeStateController.selectedDeptId.value != savedDeptId) {
+          _homeStateController.selectedDeptId.value = savedDeptId;
+        }
+      } else {
+        // 如果没有保存的部门ID，使用 HomeStateController 中的值
+        initialDeptId = _homeStateController.selectedDeptId.value;
+      }
+    }
+    
+    // 使用正确的部门ID初始化数据
+    await fetchAssetData(deptId: initialDeptId);
+    await fetchBlockData(deptId: initialDeptId);
     
     // 注册事件监听器，监听部门变化事件
     ever(_homeStateController.selectedDeptId, (deptId) {
       // 部门变化时刷新数据
-      if (deptId != null && isAdmin.value) {
-        fetchAssetData();
-        fetchBlockData();
+      if (isAdmin.value) {
+        fetchAssetData(deptId: deptId);
+        fetchBlockData(deptId: deptId);
       }
     });
     
@@ -55,20 +77,30 @@ class AssetStateController extends GetxController {
   /// 启动定时器
   void _startTimer() {
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      fetchAssetData(); // 获取资产数据
-      fetchBlockData(); // 获取块数据
+      // 获取当前选中的部门 ID
+      int? deptId;
+      if (isAdmin.value) {
+        deptId = _homeStateController.selectedDeptId.value;
+      }
+      
+      fetchAssetData(deptId: deptId); // 获取资产数据
+      fetchBlockData(deptId: deptId); // 获取块数据
     });
   }
 
   /// 获取资产数据
-  Future<void> fetchAssetData() async {
+  Future<void> fetchAssetData({int? deptId}) async {
     try {
       error.value = ''; // 清空之前的错误
       
-      // 如果是管理员，获取当前选中的部门 ID
-      int? deptId;
-      if (isAdmin.value) {
+      // 如果没有直接提供 deptId，则从 HomeStateController 中获取
+      if (deptId == null && isAdmin.value) {
         deptId = _homeStateController.selectedDeptId.value;
+      }
+      
+      // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
+      if (!isAdmin.value || deptId == 1) {
+        deptId = null;
       }
       
       final Map data = await AssetData.getAssetData(Data.totalAssetUrl, deptId: deptId); // 获取数据
@@ -80,14 +112,18 @@ class AssetStateController extends GetxController {
   }
 
   /// 获取块数据
-  Future<void> fetchBlockData() async {
+  Future<void> fetchBlockData({int? deptId}) async {
     try {
       error.value = ''; // 清空之前的错误
       
-      // 如果是管理员，获取当前选中的部门 ID
-      int? deptId;
-      if (isAdmin.value) {
+      // 如果没有直接提供 deptId，则从 HomeStateController 中获取
+      if (deptId == null && isAdmin.value) {
         deptId = _homeStateController.selectedDeptId.value;
+      }
+      
+      // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
+      if (!isAdmin.value || deptId == 1) {
+        deptId = null;
       }
       
       final List data = await AssetData.getBlockData(Data.blockUrl, deptId: deptId); // 获取数据
