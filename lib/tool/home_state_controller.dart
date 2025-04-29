@@ -67,17 +67,11 @@ class HomeStateController extends GetxController {
       isAdmin.value = admin;
       
       if (isAdmin.value) {
-        // 如果是管理员，加载部门相关数据
+        // 如果是管理员，先获取部门列表
         await fetchDeptList(); // 获取部门列表
         
-        // 确保部门列表已经加载完成
-        if (deptList.isNotEmpty) {
-          // 从 SaveData 中加载部门 ID，只在应用启动时调用一次
-          await _loadDeptIdFromStorage();
-        } else {
-          // 如果部门列表为空，设置默认部门ID
-          selectedDeptId.value = 1; // 默认部门ID为1
-        }
+        // 从 SaveData 中加载部门 ID，只在应用启动时调用一次
+        await _loadDeptIdFromStorage();
       }
     } catch (e) {
       print('加载管理员数据失败: $e');
@@ -89,6 +83,8 @@ class HomeStateController extends GetxController {
     try {
       // 确保部门列表已经加载
       if (deptList.isEmpty) {
+        // 如果部门列表为空，设置默认部门ID
+        selectedDeptId.value = 1; // 默认部门ID为1
         return;
       }
       
@@ -127,6 +123,8 @@ class HomeStateController extends GetxController {
       await SaveData.saveSelectedDeptId(firstDeptId);
     } catch (e) {
       print('从存储中加载部门ID失败: $e');
+      // 异常情况下，设置默认部门ID
+      selectedDeptId.value = 1;
     }
   }
 
@@ -230,11 +228,21 @@ class HomeStateController extends GetxController {
         });
       }
       
+      // 保存当前选中的部门ID
+      final currentDeptId = selectedDeptId.value;
+      
       // 更新部门列表
       deptList.value = data;
       
-      // 在这里不需要手动处理部门ID
-      // _loadDeptIdFromStorage 方法会在初始化时处理部门ID的恢复
+      // 验证当前部门ID是否仍然有效
+      bool currentDeptExists = data.any((dept) => dept['deptId'] == currentDeptId);
+      
+      // 如果当前部门ID不再有效，则选择第一个部门
+      if (!currentDeptExists && data.isNotEmpty) {
+        final newDeptId = data[0]['deptId'];
+        selectedDeptId.value = newDeptId;
+        await SaveData.saveSelectedDeptId(newDeptId);
+      }
     } catch (e) {
       print('获取部门列表失败: $e');
     }

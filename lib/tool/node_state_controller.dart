@@ -99,11 +99,17 @@ class NodeStateController extends GetxController {
 
   /// 获取总节点数据
   Future<void> fetchTotalNodeData({int? deptId}) async {
-    // 如果没有直接提供 deptId，则从 HomeStateController 中获取
+    // 如果没有直接提供 deptId，则从 SaveData 或 HomeStateController 中获取
     if (deptId == null && isAdmin.value) {
-      // 直接使用 HomeStateController 中的 selectedDeptId
-      final homeController = Get.find<HomeStateController>();
-      deptId = homeController.selectedDeptId.value;
+      // 先获取保存的部门ID
+      final savedDeptId = await SaveData.getSelectedDeptId();
+      if (savedDeptId != null) {
+        deptId = savedDeptId;
+      } else {
+        // 如果没有保存的部门ID，则使用 HomeStateController 中的值
+        final homeController = Get.find<HomeStateController>();
+        deptId = homeController.selectedDeptId.value;
+      }
     }
     
     // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
@@ -117,11 +123,17 @@ class NodeStateController extends GetxController {
 
   /// 获取节点数据
   Future<void> fetchNodeData({int? deptId}) async {
-    // 如果没有直接提供 deptId，则从 HomeStateController 中获取
+    // 如果没有直接提供 deptId，则从 SaveData 或 HomeStateController 中获取
     if (deptId == null && isAdmin.value) {
-      // 直接使用 HomeStateController 中的 selectedDeptId
-      final homeController = Get.find<HomeStateController>();
-      deptId = homeController.selectedDeptId.value;
+      // 先获取保存的部门ID
+      final savedDeptId = await SaveData.getSelectedDeptId();
+      if (savedDeptId != null) {
+        deptId = savedDeptId;
+      } else {
+        // 如果没有保存的部门ID，则使用 HomeStateController 中的值
+        final homeController = Get.find<HomeStateController>();
+        deptId = homeController.selectedDeptId.value;
+      }
     }
     
     // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId

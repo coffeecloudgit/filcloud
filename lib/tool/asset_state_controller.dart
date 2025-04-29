@@ -19,6 +19,12 @@ class AssetStateController extends GetxController {
   // 获取 HomeStateController 的引用
   final HomeStateController _homeStateController = Get.find<HomeStateController>();
 
+  // 存储当前部门ID的本地变量，确保在所有情况下都能正确获取
+  final RxInt _currentDeptId = 1.obs;
+  
+  // 初始化完成标志
+  final RxBool _initialized = false.obs;
+  
   @override
   void onInit() async {
     super.onInit();
@@ -26,31 +32,44 @@ class AssetStateController extends GetxController {
     // 检查管理员状态 - 使用 await 确保在继续之前完成
     await _checkAdminStatus();
     
-    // 获取初始部门ID
-    int? initialDeptId;
-    
     if (isAdmin.value) {
-      // 如果是管理员，尝试获取保存的部门ID
+      // 如果是管理员，先从存储中获取部门ID
       final savedDeptId = await SaveData.getSelectedDeptId();
       
       if (savedDeptId != null) {
         // 如果有保存的部门ID，使用它
-        initialDeptId = savedDeptId;
+        _currentDeptId.value = savedDeptId;
         
         // 同步到 HomeStateController
-        // 只有当当前选中的部门ID与保存的不同时才更新
         if (_homeStateController.selectedDeptId.value != savedDeptId) {
           _homeStateController.selectedDeptId.value = savedDeptId;
         }
       } else {
-        // 如果没有保存的部门ID，使用 HomeStateController 中的值
-        initialDeptId = _homeStateController.selectedDeptId.value;
+        // 如果没有保存的部门ID，使用默认值1
+        _currentDeptId.value = 1;
+        _homeStateController.selectedDeptId.value = 1;
       }
     }
     
-    // 使用正确的部门ID初始化数据
-    await fetchAssetData(deptId: initialDeptId);
-    await fetchBlockData(deptId: initialDeptId);
+    // 标记初始化完成
+    _initialized.value = true;
+    
+    // 监听 HomeStateController 中的部门ID变化
+    ever(_homeStateController.selectedDeptId, (deptId) {
+      if (deptId != _currentDeptId.value) {
+        // 确保 deptId 不为 null
+        _currentDeptId.value = deptId ?? 1;
+        // 刷新数据
+        if (_initialized.value) {
+          fetchAssetData();
+          fetchBlockData();
+        }
+      }
+    });
+    
+    // 使用当前部门ID初始化数据
+    await fetchAssetData();
+    await fetchBlockData();
     
     // 注册事件监听器，监听部门变化事件
     ever(_homeStateController.selectedDeptId, (deptId) {
@@ -76,26 +95,31 @@ class AssetStateController extends GetxController {
 
   /// 启动定时器
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      // 获取当前选中的部门 ID
-      int? deptId;
-      if (isAdmin.value) {
-        deptId = _homeStateController.selectedDeptId.value;
-      }
-      
-      fetchAssetData(deptId: deptId); // 获取资产数据
-      fetchBlockData(deptId: deptId); // 获取块数据
+    // 定时器只负责定期刷新，不需要立即获取数据
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      // 直接使用当前部门ID，不需要传递参数
+      fetchAssetData(); // 获取资产数据
+      fetchBlockData(); // 获取块数据
     });
   }
 
   /// 获取资产数据
   Future<void> fetchAssetData({int? deptId}) async {
     try {
+      // 如果未初始化完成且没有直接提供 deptId，则等待初始化
+      if (!_initialized.value && deptId == null) {
+        // 等待初始化完成
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!_initialized.value) {
+          return;
+        }
+      }
+      
       error.value = ''; // 清空之前的错误
       
-      // 如果没有直接提供 deptId，则从 HomeStateController 中获取
-      if (deptId == null && isAdmin.value) {
-        deptId = _homeStateController.selectedDeptId.value;
+      // 如果没有直接提供 deptId，则使用当前部门ID
+      if (deptId == null) {
+        deptId = _currentDeptId.value;
       }
       
       // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
@@ -114,11 +138,20 @@ class AssetStateController extends GetxController {
   /// 获取块数据
   Future<void> fetchBlockData({int? deptId}) async {
     try {
+      // 如果未初始化完成且没有直接提供 deptId，则等待初始化
+      if (!_initialized.value && deptId == null) {
+        // 等待初始化完成
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!_initialized.value) {
+          return;
+        }
+      }
+      
       error.value = ''; // 清空之前的错误
       
-      // 如果没有直接提供 deptId，则从 HomeStateController 中获取
-      if (deptId == null && isAdmin.value) {
-        deptId = _homeStateController.selectedDeptId.value;
+      // 如果没有直接提供 deptId，则使用当前部门ID
+      if (deptId == null) {
+        deptId = _currentDeptId.value;
       }
       
       // 如果不是管理员或者 deptId 为默认值 1，则不传递 deptId
