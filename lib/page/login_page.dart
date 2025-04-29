@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/service/push_notification_service.dart';
+import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -229,6 +230,19 @@ class _LoginPageState extends State<LoginPage> {
                               )) {
                                 // 启用推送功能
                                 PushNotificationService.loginUser();
+                                
+                                // 重置 HomeStateController 实例
+                                try {
+                                  // 如果 HomeStateController 已经注册，先删除它
+                                  if (Get.isRegistered<HomeStateController>()) {
+                                    Get.delete<HomeStateController>();
+                                  }
+                                  // 重新创建 HomeStateController 实例
+                                  Get.put(HomeStateController());
+                                } catch (e) {
+                                  print('重置 HomeStateController 失败: $e');
+                                }
+                                
                                 Get.offAll(() => const Start());
                               } else {
                                 _passwordController.clear();
