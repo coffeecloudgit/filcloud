@@ -37,45 +37,119 @@ class HttpData {
       }),
     );
 
-    // 转化为json格式
     final jsonData = jsonDecode(response.body);
+    return await _handleLoginResponse(jsonData, username);
+  }
 
-    if (jsonData['code'] == 200) {
-      // 登录成功，处理返回的数据
+  static Future<bool> _handleLoginResponse(
+      Map<String, dynamic> jsonData, String username) async {
+    if (jsonData['code'] != 200) return false;
 
-      // 保存token
-      await SaveData.saveLoginData(jsonData['token']);
+    await SaveData.saveLoginData(jsonData['token']);
+    await SaveData.saveUserInfo(username);
 
-      // 保存用户信息
-      await SaveData.saveUserInfo(username);
-      
-      // 如果登录响应中包含用户信息，直接保存
-      if (jsonData['data'] != null && jsonData['data']['user'] != null) {
-        final userData = jsonData['data']['user'];
-        
-        // 保存用户角色ID
-        if (userData['roleId'] != null) {
-          await SaveData.saveUserRole(userData['roleId']);
-        }
-        
-        // 保存用户部门ID
-        if (userData['deptId'] != null) {
-          await SaveData.saveUserDeptId(userData['deptId']);
-          // 清除上次选择的部门ID，确保重新登录时使用用户的默认部门
-          await SaveData.clearSelectedDeptId();
-
-          print(userData['deptId']);
-        }
-      } else {
-        // 如果登录响应中没有用户信息，则调用单独的API获取
-        await getUserInfo();
+    if (jsonData['data'] != null && jsonData['data']['user'] != null) {
+      final userData = jsonData['data']['user'];
+      if (userData['roleId'] != null) {
+        await SaveData.saveUserRole(userData['roleId']);
       }
-
-      return true;
+      if (userData['deptId'] != null) {
+        await SaveData.saveUserDeptId(userData['deptId']);
+        await SaveData.clearSelectedDeptId();
+      }
     } else {
-      // 登录失败，处理错误
-      return false;
+      await getUserInfo();
     }
+
+    return true;
+  }
+
+  // Passkey: register begin
+  static Future<Map<String, dynamic>> passkeyRegisterBegin(String username) async {
+    final response = await http.post(
+      Uri.parse(Data.passkeyRegisterBeginUrl),
+      headers: const <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{'username': username}),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  // Passkey: register finish
+  static Future<Map<String, dynamic>> passkeyRegisterFinish(
+      String username, Map<String, dynamic> credentialResponse) async {
+    final response = await http.post(
+      Uri.parse(Data.passkeyRegisterFinishUrl),
+      headers: const <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'username': username,
+        'response': credentialResponse,
+      }),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  // Passkey: login begin
+  static Future<Map<String, dynamic>> passkeyLoginBegin(String username) async {
+    final response = await http.post(
+      Uri.parse(Data.passkeyLoginBeginUrl),
+      headers: const <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{'username': username}),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  // Passkey: login finish (returns token like normal login)
+  static Future<bool> passkeyLoginFinish(
+      String username, Map<String, dynamic> assertionResponse) async {
+    final response = await http.post(
+      Uri.parse(Data.passkeyLoginFinishUrl),
+      headers: const <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'username': username,
+        'response': assertionResponse,
+      }),
+    );
+    final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+    return await _handleLoginResponse(jsonData, username);
+  }
+
+  /// 获取滑块拼图验证码数据（与后端 [slide_basic] 一致）。
+  static Future<Map<String, dynamic>> fetchSlideCaptcha() async {
+    final response = await http.get(Uri.parse(Data.slideCaptchaUrl));
+    final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+    if (jsonData['code'] != 200) {
+      throw Exception(jsonData['msg']?.toString() ?? '滑块验证码获取失败');
+    }
+    return jsonData;
+  }
+
+  /// 校验滑块位置；成功时服务端会将 [key] 标记为已通过，登录时 [uuid] 传该 key、[code] 传空即可。
+  static Future<bool> checkSlideCaptcha({
+    required String key,
+    required int pointX,
+    required int pointY,
+  }) async {
+    final point = '$pointX,$pointY';
+    final body =
+        'point=${Uri.encodeQueryComponent(point)}&key=${Uri.encodeQueryComponent(key)}';
+    final response = await http.post(
+      Uri.parse(Data.checkSlideCaptchaUrl),
+      headers: const <String, String>{
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
+      body: body,
+    );
+    final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+    if (jsonData['code'] != 200) return false;
+    return jsonData['data'] == true;
   }
 
   // 验证码

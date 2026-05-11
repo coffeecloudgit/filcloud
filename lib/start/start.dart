@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:fils_link/page/asset_page.dart';
 import 'package:fils_link/page/home_page.dart';
 import 'package:fils_link/page/node_page.dart';
+import 'package:fils_link/tool/app_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -43,6 +44,8 @@ class _StartState extends State<Start> {
 
   @override
   Widget build(BuildContext context) {
+    // 同步一次，确保冷启动/热重载后状态一致
+    AppTabs.activeIndex.value = _currentIndex.value;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Obx(
@@ -87,7 +90,9 @@ class _StartState extends State<Start> {
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
                             );
-                            _currentIndex.value = _bar.indexOf(e);
+                            final idx = _bar.indexOf(e);
+                            _currentIndex.value = idx;
+                            AppTabs.activeIndex.value = idx;
                           },
                           child: Column(
                             children: [

@@ -7,6 +7,9 @@ class NodeData {
   static Future<List> getNodeData(String url, {int? deptId}) async {
     // 获取token
     String? token = await SaveData.getLoginData();
+    if (token == null || token.isEmpty) {
+      return [];
+    }
     
     // 准备查询参数
     Map<String, dynamic> queryParams = {};
@@ -32,7 +35,7 @@ class NodeData {
 
       return nodeData['list'];
     } else {
-      throw Exception('Failed to load data');
+      return [];
     }
   }
 
@@ -40,6 +43,9 @@ class NodeData {
   static Future<Map> getTotalNodeData(String url, {int? deptId}) async {
     // 获取token
     String? token = await SaveData.getLoginData();
+    if (token == null || token.isEmpty) {
+      return {};
+    }
     
     // 准备查询参数
     Map<String, dynamic> queryParams = {};
@@ -65,7 +71,7 @@ class NodeData {
 
       return nodeData;
     } else {
-      throw Exception('Failed to load data');
+      return {};
     }
   }
 
@@ -73,6 +79,9 @@ class NodeData {
   static Future<bool> changeNodeName(String url, String id, String name) async {
     // 获取token
     String? token = await SaveData.getLoginData();
+    if (token == null || token.isEmpty) {
+      return false;
+    }
 
     // 构建请求 URL
     String apiUrl = url.replaceFirst(':id', id);
@@ -92,7 +101,7 @@ class NodeData {
     if (jsonData['code'] == 200) {
       return true;
     } else {
-      throw Exception('Failed to load data');
+      return false;
     }
   }
 
@@ -100,6 +109,9 @@ class NodeData {
   static Future<List> getBlockData(String url) async {
     // 获取token
     String? token = await SaveData.getLoginData();
+    if (token == null || token.isEmpty) {
+      return [];
+    }
 
     Response response =
     await ApiService.dio.get(url, options: Options(headers:{
@@ -114,7 +126,7 @@ class NodeData {
 
       return blockData['list'];
     } else {
-      throw Exception('Failed to load data');
+      return [];
     }
   }
 }

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'dart:async';
 
 import '../package/home_data.dart';
+import 'app_tabs.dart';
 
 /// `HomeStateController` 是一个首页页面状态控制器
 ///
@@ -130,7 +131,10 @@ class HomeStateController extends GetxController {
 
   /// 启动定时器
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      // 仅在已登录且当前页可见时刷新，避免后台重复请求
+      if (!await SaveData.checkLoginStatus()) return;
+      if (AppTabs.activeIndex.value != 0) return;
       // 定期获取数据，但不从 SaveData 中读取部门 ID
       fetchFilPrice(); // 获取FIL价格
       

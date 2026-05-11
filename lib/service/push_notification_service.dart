@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:fils_link/config/api_config.dart';
+
 import '../package/save_data.dart';
 
 /// `PushNotificationService` 是一个推送通知服务
@@ -57,7 +59,7 @@ class PushNotificationService {
     if (deviceToken != null && token != null) {
       // 通知后端开始推送
       await http.post(
-        Uri.parse('http://116.92.243.5:8000/api/v1/user/device_token'),
+        Uri.parse(ApiConfig.resolve('/api/v1/user/device_token')),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
