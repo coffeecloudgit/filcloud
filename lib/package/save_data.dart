@@ -96,4 +96,21 @@ class SaveData{
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('selected_dept_id');
   }
+
+  static String _passkeyOnboardingKey(String username) {
+    final safe = username.replaceAll(RegExp(r'[^\w\-]'), '_');
+    return 'passkey_onboarding_prompted_$safe';
+  }
+
+  /// 是否仍应在首次进入首页时提示「前往设置绑定通行密钥」（每个用户名至多提醒一次）。
+  static Future<bool> shouldPromptPasskeyOnboarding(String username) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final key = _passkeyOnboardingKey(username);
+    return !(prefs.getBool(key) ?? false);
+  }
+
+  static Future<void> markPasskeyOnboardingPrompted(String username) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_passkeyOnboardingKey(username), true);
+  }
 }

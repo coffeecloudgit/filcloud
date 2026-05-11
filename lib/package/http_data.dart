@@ -8,6 +8,43 @@ import '../page/login_page.dart';
 import 'data.dart';
 
 class HttpData {
+  /// 解析业务 API 的 JSON 体；遇 404/非 JSON（如 nginx 纯文本）时返回结构化错误，避免 FormatException。
+  static Map<String, dynamic> _parseJsonApiResponse(http.Response response) {
+    final status = response.statusCode;
+    if (status == 404) {
+      return {
+        'code': 404,
+        'msg': '暂无法使用，请稍后再试',
+      };
+    }
+    final trimmed = response.body.trim();
+    if (trimmed.isEmpty) {
+      return {
+        'code': status,
+        'msg': '网络异常，请稍后再试',
+      };
+    }
+    final looksJson =
+        trimmed.startsWith('{') || trimmed.startsWith('[');
+    if (!looksJson) {
+      return {
+        'code': status,
+        'msg': '服务繁忙，请稍后再试',
+      };
+    }
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      return {'code': status, 'msg': '请求异常，请稍后再试'};
+    } catch (_) {
+      return {
+        'code': status,
+        'msg': '请求异常，请稍后再试',
+      };
+    }
+  }
+
   // 获取数据
   static Future getData(String url) async {
     http.Response response = await http.get(Uri.parse(url));
@@ -21,24 +58,53 @@ class HttpData {
     }
   }
 
-  // 登录
-  static Future<bool> loginUser(String username, String password, String code,
-      String uuid, String url) async {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'username': username,
-        'password': password,
-        'code': code,
-        'uuid': uuid,
-      }),
-    );
+  // 登录。失败时 [message] 为服务端 `msg`（如「用户名或密码错误」）。
+  static Future<({bool ok, String? message})> loginUser(String username,
+      String password, String code, String uuid, String url) async {
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'password': password,
+          'code': code,
+          'uuid': uuid,
+        }),
+      );
+      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+      final codeVal = jsonData['code'];
+      final serverMsg = jsonData['msg']?.toString();
+      if (codeVal != 200) {
+        return (
+          ok: false,
+          message: _normalizeLoginErrorMessage(serverMsg, codeVal),
+        );
+      }
+      final saved = await _handleLoginResponse(jsonData, username);
+      return (
+        ok: saved,
+        message: saved ? null : (serverMsg ?? '登录数据处理失败'),
+      );
+    } catch (e) {
+      return (ok: false, message: e.toString());
+    }
+  }
 
-    final jsonData = jsonDecode(response.body);
-    return await _handleLoginResponse(jsonData, username);
+  static String _normalizeLoginErrorMessage(String? raw, dynamic code) {
+    if (raw != null && raw.isNotEmpty) {
+      switch (raw) {
+        case 'incorrect Username or Password':
+          return '用户名或密码错误';
+        case '请先完成验证码验证':
+          return '请先完成安全验证';
+        default:
+          return raw;
+      }
+    }
+    return '登录失败（$code）';
   }
 
   static Future<bool> _handleLoginResponse(
@@ -64,19 +130,7 @@ class HttpData {
     return true;
   }
 
-  // Passkey: register begin
-  static Future<Map<String, dynamic>> passkeyRegisterBegin(String username) async {
-    final response = await http.post(
-      Uri.parse(Data.passkeyRegisterBeginUrl),
-      headers: const <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, dynamic>{'username': username}),
-    );
-    return jsonDecode(response.body) as Map<String, dynamic>;
-  }
-
-  // Passkey: register finish
+  // Passkey: register finish（登录态 begin-authed 与此共用）
   static Future<Map<String, dynamic>> passkeyRegisterFinish(
       String username, Map<String, dynamic> credentialResponse) async {
     final response = await http.post(
@@ -89,7 +143,7 @@ class HttpData {
         'response': credentialResponse,
       }),
     );
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseJsonApiResponse(response);
   }
 
   // Passkey: login begin
@@ -101,24 +155,123 @@ class HttpData {
       },
       body: jsonEncode(<String, dynamic>{'username': username}),
     );
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    return _parseJsonApiResponse(response);
   }
 
-  // Passkey: login finish (returns token like normal login)
-  static Future<bool> passkeyLoginFinish(
+  /// Passkey 登录完成。成功时写 token 与用户缓存，与账号密码登录一致。
+  /// [message] 为服务端 `msg` 或本地解析说明，发布环境可据此对照后端日志。
+  static Future<({bool ok, String? message})> passkeyLoginFinish(
       String username, Map<String, dynamic> assertionResponse) async {
+    try {
+      final response = await http.post(
+        Uri.parse(Data.passkeyLoginFinishUrl),
+        headers: const <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'username': username,
+          'response': assertionResponse,
+        }),
+      );
+      final jsonData = _parseJsonApiResponse(response);
+      final serverMsg = jsonData['msg']?.toString();
+      if (jsonData['code'] != 200) {
+        return (
+          ok: false,
+          message: (serverMsg != null && serverMsg.isNotEmpty)
+              ? serverMsg
+              : '服务端错误 code=${jsonData['code']}',
+        );
+      }
+      final ok = await _handleLoginResponse(jsonData, username);
+      return (
+        ok: ok,
+        message: ok ? null : (serverMsg ?? '登录数据处理失败'),
+      );
+    } catch (e) {
+      return (ok: false, message: e.toString());
+    }
+  }
+
+  static Future<Map<String, String>?> _bearerHeaders() async {
+    final token = await SaveData.getLoginData();
+    if (token == null) return null;
+    return <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  /// 已登录用户发起通行密钥注册（无需再验证密码或滑块）。
+  static Future<Map<String, dynamic>> passkeyRegisterBeginAuthed() async {
+    final h = await _bearerHeaders();
+    if (h == null) {
+      return <String, dynamic>{'code': 401, 'msg': '未登录'};
+    }
     final response = await http.post(
-      Uri.parse(Data.passkeyLoginFinishUrl),
+      Uri.parse(Data.passkeyRegisterBeginAuthedUrl),
+      headers: h,
+    );
+    return _parseJsonApiResponse(response);
+  }
+
+  /// 已登录绑定的 finish：复用公开 /register/finish，会话键一致，无需单独接口。
+  static Future<Map<String, dynamic>> passkeyRegisterFinishAuthed(
+      String username, Map<String, dynamic> credentialResponse) async {
+    final response = await http.post(
+      Uri.parse(Data.passkeyRegisterFinishUrl),
       headers: const <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(<String, dynamic>{
         'username': username,
+        'response': credentialResponse,
+      }),
+    );
+    return _parseJsonApiResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> passkeyCredentialsList() async {
+    final h = await _bearerHeaders();
+    if (h == null) {
+      return <String, dynamic>{'code': 401, 'msg': '未登录'};
+    }
+    final response = await http.get(
+      Uri.parse(Data.passkeyCredentialsUrl),
+      headers: h,
+    );
+    return _parseJsonApiResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> passkeyCredentialDeleteBegin(
+      int id) async {
+    final h = await _bearerHeaders();
+    if (h == null) {
+      return <String, dynamic>{'code': 401, 'msg': '未登录'};
+    }
+    final response = await http.post(
+      Uri.parse(Data.passkeyCredentialDeleteBeginUrl),
+      headers: h,
+      body: jsonEncode(<String, int>{'id': id}),
+    );
+    return _parseJsonApiResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> passkeyCredentialDeleteFinish(
+      int id, Map<String, dynamic> assertionResponse) async {
+    final h = await _bearerHeaders();
+    if (h == null) {
+      return <String, dynamic>{'code': 401, 'msg': '未登录'};
+    }
+    final response = await http.post(
+      Uri.parse(Data.passkeyCredentialDeleteFinishUrl),
+      headers: h,
+      body: jsonEncode(<String, dynamic>{
+        'id': id,
         'response': assertionResponse,
       }),
     );
-    final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-    return await _handleLoginResponse(jsonData, username);
+    return _parseJsonApiResponse(response);
   }
 
   /// 获取滑块拼图验证码数据（与后端 [slide_basic] 一致）。

@@ -31,12 +31,20 @@ class Data {
   static String get deptListUrl => ApiConfig.resolve('/api/v1/dept/list');
 
   // Passkey / WebAuthn
-  static String get passkeyRegisterBeginUrl =>
-      ApiConfig.resolve('/api/v1/passkey/register/begin');
   static String get passkeyRegisterFinishUrl =>
       ApiConfig.resolve('/api/v1/passkey/register/finish');
   static String get passkeyLoginBeginUrl =>
       ApiConfig.resolve('/api/v1/passkey/login/begin');
   static String get passkeyLoginFinishUrl =>
       ApiConfig.resolve('/api/v1/passkey/login/finish');
+
+  /// 已登录：绑定通行密钥（仅需 JWT，finish 复用 passkeyRegisterFinishUrl）
+  static String get passkeyRegisterBeginAuthedUrl =>
+      ApiConfig.resolve('/api/v1/passkey/register/begin-authed');
+  static String get passkeyCredentialsUrl =>
+      ApiConfig.resolve('/api/v1/passkey/credentials');
+  static String get passkeyCredentialDeleteBeginUrl =>
+      ApiConfig.resolve('/api/v1/passkey/credentials/delete/begin');
+  static String get passkeyCredentialDeleteFinishUrl =>
+      ApiConfig.resolve('/api/v1/passkey/credentials/delete/finish');
 }

@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:fils_link/package/save_data.dart';
+import 'package:fils_link/page/setting_page.dart';
+import 'package:fils_link/tool/app_session.dart';
 import 'package:fils_link/page/asset_page.dart';
 import 'package:fils_link/page/home_page.dart';
 import 'package:fils_link/page/node_page.dart';
@@ -21,6 +25,14 @@ class _StartState extends State<Start> {
   final PageController _pageController = PageController(initialPage: 0);
   final RxInt _currentIndex = 0.obs;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_consumePasskeyOnboardingIfNeeded());
+    });
+  }
+
   final List<Widget> _pages = const [
     HomePage(),
     NodePage(),
@@ -41,6 +53,40 @@ class _StartState extends State<Start> {
     '消息',
     '资产',
   ];
+
+  Future<void> _consumePasskeyOnboardingIfNeeded() async {
+    if (!AppSession.pendingPasskeyOnboardingSuggestion) return;
+    AppSession.pendingPasskeyOnboardingSuggestion = false;
+    final username = await SaveData.getUserInfo();
+    if (username == null || !mounted) return;
+    if (!await SaveData.shouldPromptPasskeyOnboarding(username)) return;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('添加通行密钥'),
+        content: const Text('可在设置里添加通行密钥，以后免输密码登录。'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await SaveData.markPasskeyOnboardingPrompted(username);
+              if (ctx.mounted) Navigator.of(ctx).pop();
+            },
+            child: const Text('我知道了'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await SaveData.markPasskeyOnboardingPrompted(username);
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (mounted) await Get.to(() => const SettingPage());
+            },
+            child: const Text('前往设置'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

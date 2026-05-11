@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/service/passkey_service.dart';
 import 'package:fils_link/service/push_notification_service.dart';
+import 'package:fils_link/tool/app_session.dart';
 import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -121,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
     // 滑块已校验通过，下面是真正的登录请求。锁住按钮以免慢网时被误以为没点。
     setState(() => _loggingIn = true);
     try {
-      final ok = await HttpData.loginUser(
+      final result = await HttpData.loginUser(
         username,
         password,
         '',
@@ -129,10 +130,14 @@ class _LoginPageState extends State<LoginPage> {
         Data.url,
       );
       if (!mounted) return;
-      if (!ok) {
-        Get.snackbar('提示', '登录失败');
+      if (!result.ok) {
+        Get.snackbar('提示', result.message ?? '登录失败');
         return;
       }
+      final suggest =
+          await _shouldSuggestPasskeyOnboardingAfterPasswordLogin(username);
+      if (!mounted) return;
+      AppSession.pendingPasskeyOnboardingSuggestion = suggest;
       _enterHome();
     } finally {
       if (mounted) setState(() => _loggingIn = false);
@@ -152,6 +157,26 @@ class _LoginPageState extends State<LoginPage> {
     Get.offAll(() => const Start());
   }
 
+  /// 尚无通行密钥且本账号未接受过「前往设置」引导时，在首页首帧后再提示（不重复验证码）。
+  Future<bool> _shouldSuggestPasskeyOnboardingAfterPasswordLogin(
+      String username) async {
+    if (!await SaveData.shouldPromptPasskeyOnboarding(username)) {
+      return false;
+    }
+    return _userHasNoPasskey(username);
+  }
+
+  Future<bool> _userHasNoPasskey(String username) async {
+    try {
+      final begin = await HttpData.passkeyLoginBegin(username);
+      if (begin['code'] == 200) return false;
+      final msg = begin['msg']?.toString() ?? '';
+      return begin['code'] == 400 && msg.contains('未注册');
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _loginWithPasskey() async {
     final username = _usernameController.text.trim();
     if (username.isEmpty) {
@@ -166,46 +191,18 @@ class _LoginPageState extends State<LoginPage> {
         final msg = begin['msg']?.toString() ?? '';
         final needRegister =
             begin['code'] == 400 && msg.contains('未注册');
-        if (!needRegister) {
+        if (needRegister) {
           Get.snackbar(
             '提示',
-            msg.isNotEmpty ? msg : '通行密钥登录开始失败',
+            '您还没有通行密钥，请先用密码登录，再在设置里添加通行密钥。',
           );
           return;
         }
-
-        final regBegin = await HttpData.passkeyRegisterBegin(username);
-        if (regBegin['code'] != 200) {
-          Get.snackbar(
-            '提示',
-            regBegin['msg']?.toString() ?? '通行密钥注册开始失败',
-          );
-          return;
-        }
-        final regPk = (regBegin['data'] as Map)['publicKey']
-            as Map<String, dynamic>;
-        final cred = await PasskeyService.register(
-          rpId: (regPk['rp'] as Map)['id'] as String,
-          creationOptionsPublicKey: regPk,
+        Get.snackbar(
+          '提示',
+          msg.isNotEmpty ? msg : '通行密钥登录开始失败',
         );
-        final regFinish =
-            await HttpData.passkeyRegisterFinish(username, cred);
-        if (regFinish['code'] != 200) {
-          Get.snackbar(
-            '提示',
-            regFinish['msg']?.toString() ?? '通行密钥注册失败',
-          );
-          return;
-        }
-
-        begin = await HttpData.passkeyLoginBegin(username);
-        if (begin['code'] != 200) {
-          Get.snackbar(
-            '提示',
-            begin['msg']?.toString() ?? '通行密钥登录开始失败',
-          );
-          return;
-        }
+        return;
       }
 
       final publicKey =
@@ -214,13 +211,16 @@ class _LoginPageState extends State<LoginPage> {
         rpId: (publicKey['rpId'] as String?) ?? 'api.coffeecloud.info',
         requestOptionsPublicKey: publicKey,
       );
-      final ok =
-          await HttpData.passkeyLoginFinish(username, assertion);
-      if (!ok) {
-        Get.snackbar('提示', '通行密钥登录失败');
+      final finish = await HttpData.passkeyLoginFinish(username, assertion);
+      if (!finish.ok) {
+        Get.snackbar(
+          '提示',
+          finish.message ?? '通行密钥登录失败',
+        );
         return;
       }
 
+      AppSession.pendingPasskeyOnboardingSuggestion = false;
       _enterHome();
     } catch (e) {
       if (e is PlatformException) {
@@ -498,7 +498,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: _loggingIn ? null : _backToUsername,
                         child: Text(
-                          '返回修改用户名',
+                          '返回',
                           style: textTheme.labelLarge,
                         ),
                       ),
@@ -512,9 +512,19 @@ class _LoginPageState extends State<LoginPage> {
                                 ? null
                                 : () => unawaited(_loginWithPasskey()),
                             child: Text(
-                              '通过通行密钥登录',
+                              '通行密钥登录',
                               style: textTheme.labelLarge,
                             ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '首次请密码登录，之后在设置中添加',
+                          textAlign: TextAlign.center,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ),
