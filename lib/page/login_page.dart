@@ -521,7 +521,7 @@ class _LoginPageState extends State<LoginPage> {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          '首次请密码登录，之后在设置中添加',
+                          '需要安装 iOS 17 或更高版本的设备。',
                           textAlign: TextAlign.center,
                           style: textTheme.labelSmall?.copyWith(
                             color: Colors.grey.shade600,
