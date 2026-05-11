@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 
-import '../package/save_data.dart';
 import '../page/login_page.dart';
-import '../tool/sector_state_controller.dart';
+import '../tool/app_session.dart';
 
 /// `ApiService` 是一个全局的网络请求和监听服务
 ///
@@ -33,12 +32,8 @@ class ApiInterceptor extends Interceptor {
       // 使用全局 navigatorKey 来获取 context
       final BuildContext? context = ApiService.navigatorKey.currentContext;
 
-      SaveData.logout(); // 清除token
-
-      // 退出登录时，删除特定 GetX 控制器
-      if (Get.isRegistered<SectorStateController>()) {
-        Get.delete<SectorStateController>();
-      }
+      // 清理会话并停止所有定时刷新
+      AppSession.logoutAndReset();
 
       // 退出登录
       Get.offAll(() => const LoginPage());

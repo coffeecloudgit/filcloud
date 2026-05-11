@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../package/data.dart';
 import '../package/http_data.dart';
-import '../package/save_data.dart';
+import '../tool/app_session.dart';
 import 'login_page.dart';
 
 class SettingPage extends StatefulWidget {
@@ -58,7 +58,7 @@ class _SettingPageState extends State<SettingPage> {
               // 向远程服务器请求退出登录
               HttpData.logout(Data.logoutUrl).then((value) {
                 if (value) {
-                  SaveData.logout(); // 清除token
+                  AppSession.logoutAndReset(); // 清除token并停止所有定时刷新
                   // 退出登录
                   Get.offAll(() => const LoginPage());
                 } else {

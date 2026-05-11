@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import UserNotifications
+import AuthenticationServices
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -15,6 +16,11 @@ import UserNotifications
 
         /// 注册 Flutter 插件
         GeneratedPluginRegistrant.register(with: self)
+        
+        // Passkeys channel
+        if let controller = window?.rootViewController as? FlutterViewController {
+            PasskeyChannel.register(with: controller)
+        }
 
         
         /// 请求通知权限

@@ -4,6 +4,7 @@ import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:get/get.dart';
 import 'dart:async';
+import 'app_tabs.dart';
 
 /// `AssetStateController` 是一个资产页面状态控制器
 ///
@@ -71,15 +72,6 @@ class AssetStateController extends GetxController {
     await fetchAssetData();
     await fetchBlockData();
     
-    // 注册事件监听器，监听部门变化事件
-    ever(_homeStateController.selectedDeptId, (deptId) {
-      // 部门变化时刷新数据
-      if (isAdmin.value) {
-        fetchAssetData(deptId: deptId);
-        fetchBlockData(deptId: deptId);
-      }
-    });
-    
     _startTimer(); // 启动定时器
   }
   
@@ -97,6 +89,8 @@ class AssetStateController extends GetxController {
   void _startTimer() {
     // 定时器只负责定期刷新，不需要立即获取数据
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      if (!await SaveData.checkLoginStatus()) return;
+      if (AppTabs.activeIndex.value != 3) return;
       // 直接使用当前部门ID，不需要传递参数
       fetchAssetData(); // 获取资产数据
       fetchBlockData(); // 获取块数据

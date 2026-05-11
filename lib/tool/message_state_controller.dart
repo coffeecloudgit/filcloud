@@ -1,8 +1,10 @@
 import 'package:fils_link/package/data.dart';
+import 'package:fils_link/package/save_data.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 
 import '../package/message_data.dart';
+import 'app_tabs.dart';
 
 /// `MessageStateController` 是一个消息页面状态控制器
 ///
@@ -21,7 +23,9 @@ class MessageStateController extends GetxController {
 
   /// 启动定时器
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      if (!await SaveData.checkLoginStatus()) return;
+      if (AppTabs.activeIndex.value != 2) return;
       fetchMessageData(); // 获取消息数据
     });
   }
