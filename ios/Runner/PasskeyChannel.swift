@@ -162,8 +162,23 @@ final class PasskeyChannel: NSObject, ASAuthorizationControllerDelegate, ASAutho
             self.clearResult()
             return
         }
-        self.result?(FlutterError(code: "passkey_error", message: error.localizedDescription, details: nil))
+        self.result?(Self.flutterError(for: error))
         self.clearResult()
+    }
+
+    /// 首次安装后立刻点通行密钥时，系统常在拉取 AASA / 建立 `webcredentials` 关联阶段返回
+    /// “Please try again in a few seconds”（与 TeamID.BundleID + 域名一起出现），属短暂态而非配置错误。
+    private static func flutterError(for error: Error) -> FlutterError {
+        let raw = error.localizedDescription
+        let lower = raw.lowercased()
+        if lower.contains("try again") || lower.contains("few seconds") || lower.contains("稍后再试") {
+            return FlutterError(
+                code: "passkey_transient",
+                message: "",
+                details: nil
+            )
+        }
+        return FlutterError(code: "passkey_error", message: raw, details: nil)
     }
 
     private func finishOK(_ obj: [String: Any]) {

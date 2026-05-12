@@ -93,11 +93,10 @@ class _SecurityCenterPageState extends State<SecurityCenterPage> {
         );
       }
     } on PlatformException catch (e) {
-      if (e.code != 'passkey_cancelled' && mounted) {
-        Get.snackbar('提示', e.message ?? e.code);
-      }
-    } catch (e) {
-      if (mounted) Get.snackbar('提示', '$e');
+      if (e.code == 'passkey_cancelled') return;
+      if (mounted) Get.snackbar('提示', '通行密钥暂不可用');
+    } catch (_) {
+      if (mounted) Get.snackbar('提示', '通行密钥暂不可用');
     } finally {
       if (mounted) setState(() => _passkeyActionBusy = false);
     }
@@ -165,11 +164,10 @@ class _SecurityCenterPageState extends State<SecurityCenterPage> {
       rootNav.popUntil((route) => route.isFirst);
       Get.offAll(() => const LoginPage());
     } on PlatformException catch (e) {
-      if (e.code != 'passkey_cancelled' && mounted) {
-        Get.snackbar('提示', e.message ?? e.code);
-      }
-    } catch (e) {
-      if (mounted) Get.snackbar('提示', '$e');
+      if (e.code == 'passkey_cancelled') return;
+      if (mounted) Get.snackbar('提示', '通行密钥暂不可用');
+    } catch (_) {
+      if (mounted) Get.snackbar('提示', '通行密钥暂不可用');
     } finally {
       if (mounted) setState(() => _passkeyActionBusy = false);
     }

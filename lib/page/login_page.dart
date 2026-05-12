@@ -257,15 +257,15 @@ class _LoginPageState extends State<LoginPage> {
 
       AppSession.pendingPasskeyOnboardingSuggestion = false;
       _enterHome();
-    } catch (e) {
-      if (e is PlatformException) {
-        if (e.code == 'passkey_cancelled' ||
-            ((e.message?.contains('AuthorizationError') ?? false) &&
-                (e.message?.contains('1001') ?? false))) {
-          return;
-        }
+    } on PlatformException catch (e) {
+      if (e.code == 'passkey_cancelled' ||
+          ((e.message?.contains('AuthorizationError') ?? false) &&
+              (e.message?.contains('1001') ?? false))) {
+        return;
       }
-      Get.snackbar('提示', '通行密钥登录失败: $e');
+      Get.snackbar('提示', '通行密钥暂不可用');
+    } catch (_) {
+      Get.snackbar('提示', '通行密钥暂不可用');
     } finally {
       _passkeyBusy.value = false;
     }
