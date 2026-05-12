@@ -24,12 +24,14 @@ lib/
 │   ├── asset_page.dart    # 资产页面
 │   ├── home_page.dart     # 首页
 │   ├── login_page.dart    # 登录页面
+│   ├── security_center_page.dart # 安全中心（通行密钥）
 │   ├── message_page.dart  # 消息页面
 │   ├── node_page.dart     # 节点页面
 │   ├── sector_page.dart   # 扇区详情页面
 │   └── setting_page.dart  # 设置页面
 ├── service/              # 服务层
 │   ├── api_service.dart   # API 服务
+│   ├── passkey_service.dart # iOS 通行密钥桥接（AuthenticationServices）
 │   └── push_notification_service.dart # 推送通知服务
 ├── start/                # 应用启动相关
 │   └── start.dart        # 主导航结构
@@ -44,6 +46,7 @@ lib/
 - 验证码机制
 - 登录状态管理
 - 会话过期处理
+- iOS 通行密钥（Passkey）登录/绑定（支持无用户名发现式登录）
 
 ### 2. 首页模块
 
@@ -138,7 +141,11 @@ lib/
 4. 运行应用
 
    ```bash
+   # 默认 Debug 会指向本机后端（iOS 模拟器访问 127.0.0.1）
    flutter run
+
+   # 指向指定环境（例如线上 / 测试后端）
+   flutter run --dart-define=API_BASE_URL=https://<your-api-origin>
    ```
 
 ### 构建发布版本
