@@ -12,6 +12,10 @@ import 'sector_state_controller.dart';
 abstract final class AppSession {
   AppSession._();
 
+  /// 密码登录成功且满足「尚无通行密钥 + 未展示过引导」时，由 [LoginPage] 置为 true；
+  /// [Start] 在首帧后消费并弹出正式说明对话框。
+  static bool pendingPasskeyOnboardingSuggestion = false;
+
   static Future<void> logoutAndReset() async {
     await SaveData.logout();
 

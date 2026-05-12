@@ -1,10 +1,11 @@
+import 'package:fils_link/package/data.dart';
+import 'package:fils_link/package/http_data.dart';
+import 'package:fils_link/tool/app_session.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../package/data.dart';
-import '../package/http_data.dart';
-import '../tool/app_session.dart';
 import 'login_page.dart';
+import 'security_center_page.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -55,11 +56,39 @@ class _SettingPageState extends State<SettingPage> {
           InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
-              // 向远程服务器请求退出登录
+              // 从底部 Sheet 打开时勿用 Get.to，否则与 Modal 路由栈冲突，返回后再次点击无响应。
+              Navigator.of(context, rootNavigator: true).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => const SecurityCenterPage(),
+                ),
+              );
+            },
+            child: Container(
+              height: 60,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
+              child: const Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 25),
+                  child: Text('安全中心',
+                      style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () {
               HttpData.logout(Data.logoutUrl).then((value) {
                 if (value) {
-                  AppSession.logoutAndReset(); // 清除token并停止所有定时刷新
-                  // 退出登录
+                  AppSession.logoutAndReset();
                   Get.offAll(() => const LoginPage());
                 } else {
                   Get.snackbar('提示', '退出登录失败');
@@ -73,7 +102,6 @@ class _SettingPageState extends State<SettingPage> {
                 borderRadius: BorderRadius.all(Radius.circular(20)),
               ),
               child: const Align(
-                // 左对齐
                 alignment: Alignment.centerLeft,
                 child: Padding(
                   padding: EdgeInsets.only(left: 25),

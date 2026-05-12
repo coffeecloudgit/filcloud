@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:fils_link/config/api_config.dart';
 import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/service/passkey_service.dart';
 import 'package:fils_link/service/push_notification_service.dart';
+import 'package:fils_link/tool/app_session.dart';
 import 'package:fils_link/tool/home_state_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -121,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
     // 滑块已校验通过，下面是真正的登录请求。锁住按钮以免慢网时被误以为没点。
     setState(() => _loggingIn = true);
     try {
-      final ok = await HttpData.loginUser(
+      final result = await HttpData.loginUser(
         username,
         password,
         '',
@@ -129,10 +131,14 @@ class _LoginPageState extends State<LoginPage> {
         Data.url,
       );
       if (!mounted) return;
-      if (!ok) {
-        Get.snackbar('提示', '登录失败');
+      if (!result.ok) {
+        Get.snackbar('提示', result.message ?? '登录失败');
         return;
       }
+      final suggest =
+          await _shouldSuggestPasskeyOnboardingAfterPasswordLogin(username);
+      if (!mounted) return;
+      AppSession.pendingPasskeyOnboardingSuggestion = suggest;
       _enterHome();
     } finally {
       if (mounted) setState(() => _loggingIn = false);
@@ -152,53 +158,35 @@ class _LoginPageState extends State<LoginPage> {
     Get.offAll(() => const Start());
   }
 
+  /// 尚无通行密钥且本账号未接受过「前往设置」引导时，在首页首帧后再提示（不重复验证码）。
+  Future<bool> _shouldSuggestPasskeyOnboardingAfterPasswordLogin(
+      String username) async {
+    if (!await SaveData.shouldPromptPasskeyOnboarding(username)) {
+      return false;
+    }
+    return _userHasNoPasskey(username);
+  }
+
+  Future<bool> _userHasNoPasskey(String username) async {
+    try {
+      final begin = await HttpData.passkeyLoginBegin(username);
+      if (begin['code'] == 200) return false;
+      final msg = begin['msg']?.toString() ?? '';
+      return begin['code'] == 400 && msg.contains('未注册');
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _loginWithPasskey() async {
     final username = _usernameController.text.trim();
-    if (username.isEmpty) {
-      Get.snackbar('提示', '请先输入用户名');
-      return;
-    }
     _passkeyBusy.value = true;
     try {
-      Map<String, dynamic> begin = await HttpData.passkeyLoginBegin(username);
+      Map<String, dynamic> begin;
+      String? discoverableSessionId;
 
-      if (begin['code'] != 200) {
-        final msg = begin['msg']?.toString() ?? '';
-        final needRegister =
-            begin['code'] == 400 && msg.contains('未注册');
-        if (!needRegister) {
-          Get.snackbar(
-            '提示',
-            msg.isNotEmpty ? msg : '通行密钥登录开始失败',
-          );
-          return;
-        }
-
-        final regBegin = await HttpData.passkeyRegisterBegin(username);
-        if (regBegin['code'] != 200) {
-          Get.snackbar(
-            '提示',
-            regBegin['msg']?.toString() ?? '通行密钥注册开始失败',
-          );
-          return;
-        }
-        final regPk = (regBegin['data'] as Map)['publicKey']
-            as Map<String, dynamic>;
-        final cred = await PasskeyService.register(
-          rpId: (regPk['rp'] as Map)['id'] as String,
-          creationOptionsPublicKey: regPk,
-        );
-        final regFinish =
-            await HttpData.passkeyRegisterFinish(username, cred);
-        if (regFinish['code'] != 200) {
-          Get.snackbar(
-            '提示',
-            regFinish['msg']?.toString() ?? '通行密钥注册失败',
-          );
-          return;
-        }
-
-        begin = await HttpData.passkeyLoginBegin(username);
+      if (username.isEmpty) {
+        begin = await HttpData.passkeyLoginBeginDiscoverable();
         if (begin['code'] != 200) {
           Get.snackbar(
             '提示',
@@ -206,31 +194,78 @@ class _LoginPageState extends State<LoginPage> {
           );
           return;
         }
+        final data = begin['data'] as Map?;
+        discoverableSessionId = data?['sessionId']?.toString();
+        if (discoverableSessionId == null || discoverableSessionId.isEmpty) {
+          Get.snackbar('提示', '登录会话无效，请重试');
+          return;
+        }
+      } else {
+        begin = await HttpData.passkeyLoginBegin(username);
+
+        if (begin['code'] != 200) {
+          final msg = begin['msg']?.toString() ?? '';
+          final needRegister =
+              begin['code'] == 400 && msg.contains('未注册');
+          if (needRegister) {
+            Get.snackbar(
+              '提示',
+              '您还没有通行密钥，请先用密码登录，再在「设置 → 安全中心」里添加通行密钥。',
+            );
+            return;
+          }
+          Get.snackbar(
+            '提示',
+            msg.isNotEmpty ? msg : '通行密钥登录开始失败',
+          );
+          return;
+        }
       }
 
       final publicKey =
           (begin['data'] as Map)['publicKey'] as Map<String, dynamic>;
+      final host = Uri.tryParse(ApiConfig.baseOrigin)?.host;
       final assertion = await PasskeyService.authenticate(
-        rpId: (publicKey['rpId'] as String?) ?? 'api.coffeecloud.info',
+        rpId: (publicKey['rpId'] as String?) ??
+            host ??
+            'api.coffeecloud.info',
         requestOptionsPublicKey: publicKey,
       );
-      final ok =
-          await HttpData.passkeyLoginFinish(username, assertion);
-      if (!ok) {
-        Get.snackbar('提示', '通行密钥登录失败');
-        return;
-      }
 
-      _enterHome();
-    } catch (e) {
-      if (e is PlatformException) {
-        if (e.code == 'passkey_cancelled' ||
-            ((e.message?.contains('AuthorizationError') ?? false) &&
-                (e.message?.contains('1001') ?? false))) {
+      if (username.isEmpty) {
+        final finish = await HttpData.passkeyLoginFinishDiscoverable(
+          discoverableSessionId!,
+          assertion,
+        );
+        if (!finish.ok) {
+          Get.snackbar(
+            '提示',
+            finish.message ?? '通行密钥登录失败',
+          );
+          return;
+        }
+      } else {
+        final finish = await HttpData.passkeyLoginFinish(username, assertion);
+        if (!finish.ok) {
+          Get.snackbar(
+            '提示',
+            finish.message ?? '通行密钥登录失败',
+          );
           return;
         }
       }
-      Get.snackbar('提示', '通行密钥登录失败: $e');
+
+      AppSession.pendingPasskeyOnboardingSuggestion = false;
+      _enterHome();
+    } on PlatformException catch (e) {
+      if (e.code == 'passkey_cancelled' ||
+          ((e.message?.contains('AuthorizationError') ?? false) &&
+              (e.message?.contains('1001') ?? false))) {
+        return;
+      }
+      Get.snackbar('提示', '通行密钥暂不可用');
+    } catch (_) {
+      Get.snackbar('提示', '通行密钥暂不可用');
     } finally {
       _passkeyBusy.value = false;
     }
@@ -374,26 +409,74 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 20),
                     if (_step == _LoginStep.enterUsername) ...[
-                      FilledButton(
-                        onPressed: usernameFilled
-                            ? () => unawaited(_onContinue())
-                            : null,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xff0071E3),
-                          disabledBackgroundColor:
-                              const Color(0xff0071E3).withValues(alpha: 0.35),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                      Obx(
+                        () => Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: (usernameFilled &&
+                                        !_passkeyBusy.value)
+                                    ? () => unawaited(_onContinue())
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xff0071E3),
+                                  disabledBackgroundColor: const Color(0xff0071E3)
+                                      .withValues(alpha: 0.35),
+                                  foregroundColor: Colors.white,
+                                  disabledForegroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  '继续',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: _passkeyBusy.value
+                                    ? null
+                                    : () => unawaited(_loginWithPasskey()),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  disabledBackgroundColor:
+                                      Colors.black.withValues(alpha: 0.5),
+                                  foregroundColor: Colors.white,
+                                  disabledForegroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  '通行密钥',
+                                  style: textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          '继续',
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '通行密钥需 iOS 15+ 且已在系统内配置',
+                        textAlign: TextAlign.center,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ] else if (_step == _LoginStep.preparingPassword) ...[
@@ -498,24 +581,8 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: _loggingIn ? null : _backToUsername,
                         child: Text(
-                          '返回修改用户名',
+                          '返回',
                           style: textTheme.labelLarge,
-                        ),
-                      ),
-                    ],
-                    if (_step == _LoginStep.enterUsername) ...[
-                      const SizedBox(height: 12),
-                      Center(
-                        child: Obx(
-                          () => TextButton(
-                            onPressed: _passkeyBusy.value
-                                ? null
-                                : () => unawaited(_loginWithPasskey()),
-                            child: Text(
-                              '通过通行密钥登录',
-                              style: textTheme.labelLarge,
-                            ),
-                          ),
                         ),
                       ),
                     ],

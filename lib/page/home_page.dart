@@ -626,19 +626,18 @@ class _HomePageState extends State<HomePage> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          _homeStateController
-                                              .filPrice['flowTotal'],
-                                          maxLines: 2,
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                    Expanded(
+                                      child: Text(
+                                        _homeStateController
+                                            .filPrice['flowTotal'],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     const Text(
