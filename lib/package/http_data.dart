@@ -158,6 +158,58 @@ class HttpData {
     return _parseJsonApiResponse(response);
   }
 
+  /// 无用户名时的通行密钥登录（发现式凭据）。
+  static Future<Map<String, dynamic>> passkeyLoginBeginDiscoverable() async {
+    final response = await http.post(
+      Uri.parse(Data.passkeyLoginBeginDiscoverableUrl),
+      headers: const <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+    return _parseJsonApiResponse(response);
+  }
+
+  static Future<({bool ok, String? message})> passkeyLoginFinishDiscoverable(
+    String sessionId,
+    Map<String, dynamic> assertionResponse,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse(Data.passkeyLoginFinishDiscoverableUrl),
+        headers: const <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'sessionId': sessionId,
+          'response': assertionResponse,
+        }),
+      );
+      final jsonData = _parseJsonApiResponse(response);
+      final serverMsg = jsonData['msg']?.toString();
+      if (jsonData['code'] != 200) {
+        return (
+          ok: false,
+          message: (serverMsg != null && serverMsg.isNotEmpty)
+              ? serverMsg
+              : '服务端错误 code=${jsonData['code']}',
+        );
+      }
+      var username = '';
+      final data = jsonData['data'];
+      if (data is Map && data['user'] is Map) {
+        username =
+            (data['user'] as Map)['username']?.toString() ?? '';
+      }
+      final ok = await _handleLoginResponse(jsonData, username);
+      return (
+        ok: ok,
+        message: ok ? null : (serverMsg ?? '登录数据处理失败'),
+      );
+    } catch (e) {
+      return (ok: false, message: e.toString());
+    }
+  }
+
   /// Passkey 登录完成。成功时写 token 与用户缓存，与账号密码登录一致。
   /// [message] 为服务端 `msg` 或本地解析说明，发布环境可据此对照后端日志。
   static Future<({bool ok, String? message})> passkeyLoginFinish(
@@ -350,6 +402,13 @@ class HttpData {
       
       if (jsonData['code'] == 200 && jsonData['data'] != null && jsonData['data']['user'] != null) {
         final userData = jsonData['data']['user'];
+
+        if (userData['username'] != null) {
+          final un = userData['username'].toString();
+          if (un.isNotEmpty) {
+            await SaveData.saveUserInfo(un);
+          }
+        }
         
         // 检查是否包含roleId字段
         if (userData['roleId'] != null) {

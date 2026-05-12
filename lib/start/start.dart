@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:fils_link/package/save_data.dart';
-import 'package:fils_link/page/setting_page.dart';
+import 'package:fils_link/page/security_center_page.dart';
 import 'package:fils_link/tool/app_session.dart';
 import 'package:fils_link/page/asset_page.dart';
 import 'package:fils_link/page/home_page.dart';
@@ -66,7 +66,7 @@ class _StartState extends State<Start> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: const Text('添加通行密钥'),
-        content: const Text('可在设置里添加通行密钥，以后免输密码登录。'),
+        content: const Text('可在「设置 → 安全中心」里添加通行密钥，以后免输密码登录。'),
         actions: [
           TextButton(
             onPressed: () async {
@@ -79,9 +79,9 @@ class _StartState extends State<Start> {
             onPressed: () async {
               await SaveData.markPasskeyOnboardingPrompted(username);
               if (ctx.mounted) Navigator.of(ctx).pop();
-              if (mounted) await Get.to(() => const SettingPage());
+              if (mounted) await Get.to(() => const SecurityCenterPage());
             },
-            child: const Text('前往设置'),
+            child: const Text('前往安全中心'),
           ),
         ],
       ),

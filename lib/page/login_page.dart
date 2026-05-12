@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fils_link/config/api_config.dart';
 import 'package:fils_link/package/save_data.dart';
 import 'package:fils_link/service/passkey_service.dart';
 import 'package:fils_link/service/push_notification_service.dart';
@@ -179,45 +180,79 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loginWithPasskey() async {
     final username = _usernameController.text.trim();
-    if (username.isEmpty) {
-      Get.snackbar('提示', '请先输入用户名');
-      return;
-    }
     _passkeyBusy.value = true;
     try {
-      Map<String, dynamic> begin = await HttpData.passkeyLoginBegin(username);
+      Map<String, dynamic> begin;
+      String? discoverableSessionId;
 
-      if (begin['code'] != 200) {
-        final msg = begin['msg']?.toString() ?? '';
-        final needRegister =
-            begin['code'] == 400 && msg.contains('未注册');
-        if (needRegister) {
+      if (username.isEmpty) {
+        begin = await HttpData.passkeyLoginBeginDiscoverable();
+        if (begin['code'] != 200) {
           Get.snackbar(
             '提示',
-            '您还没有通行密钥，请先用密码登录，再在设置里添加通行密钥。',
+            begin['msg']?.toString() ?? '通行密钥登录开始失败',
           );
           return;
         }
-        Get.snackbar(
-          '提示',
-          msg.isNotEmpty ? msg : '通行密钥登录开始失败',
-        );
-        return;
+        final data = begin['data'] as Map?;
+        discoverableSessionId = data?['sessionId']?.toString();
+        if (discoverableSessionId == null || discoverableSessionId.isEmpty) {
+          Get.snackbar('提示', '登录会话无效，请重试');
+          return;
+        }
+      } else {
+        begin = await HttpData.passkeyLoginBegin(username);
+
+        if (begin['code'] != 200) {
+          final msg = begin['msg']?.toString() ?? '';
+          final needRegister =
+              begin['code'] == 400 && msg.contains('未注册');
+          if (needRegister) {
+            Get.snackbar(
+              '提示',
+              '您还没有通行密钥，请先用密码登录，再在「设置 → 安全中心」里添加通行密钥。',
+            );
+            return;
+          }
+          Get.snackbar(
+            '提示',
+            msg.isNotEmpty ? msg : '通行密钥登录开始失败',
+          );
+          return;
+        }
       }
 
       final publicKey =
           (begin['data'] as Map)['publicKey'] as Map<String, dynamic>;
+      final host = Uri.tryParse(ApiConfig.baseOrigin)?.host;
       final assertion = await PasskeyService.authenticate(
-        rpId: (publicKey['rpId'] as String?) ?? 'api.coffeecloud.info',
+        rpId: (publicKey['rpId'] as String?) ??
+            host ??
+            'api.coffeecloud.info',
         requestOptionsPublicKey: publicKey,
       );
-      final finish = await HttpData.passkeyLoginFinish(username, assertion);
-      if (!finish.ok) {
-        Get.snackbar(
-          '提示',
-          finish.message ?? '通行密钥登录失败',
+
+      if (username.isEmpty) {
+        final finish = await HttpData.passkeyLoginFinishDiscoverable(
+          discoverableSessionId!,
+          assertion,
         );
-        return;
+        if (!finish.ok) {
+          Get.snackbar(
+            '提示',
+            finish.message ?? '通行密钥登录失败',
+          );
+          return;
+        }
+      } else {
+        final finish = await HttpData.passkeyLoginFinish(username, assertion);
+        if (!finish.ok) {
+          Get.snackbar(
+            '提示',
+            finish.message ?? '通行密钥登录失败',
+          );
+          return;
+        }
       }
 
       AppSession.pendingPasskeyOnboardingSuggestion = false;
@@ -374,26 +409,74 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 20),
                     if (_step == _LoginStep.enterUsername) ...[
-                      FilledButton(
-                        onPressed: usernameFilled
-                            ? () => unawaited(_onContinue())
-                            : null,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xff0071E3),
-                          disabledBackgroundColor:
-                              const Color(0xff0071E3).withValues(alpha: 0.35),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                      Obx(
+                        () => Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: (usernameFilled &&
+                                        !_passkeyBusy.value)
+                                    ? () => unawaited(_onContinue())
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xff0071E3),
+                                  disabledBackgroundColor: const Color(0xff0071E3)
+                                      .withValues(alpha: 0.35),
+                                  foregroundColor: Colors.white,
+                                  disabledForegroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  '继续',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: _passkeyBusy.value
+                                    ? null
+                                    : () => unawaited(_loginWithPasskey()),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  disabledBackgroundColor:
+                                      Colors.black.withValues(alpha: 0.5),
+                                  foregroundColor: Colors.white,
+                                  disabledForegroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  '通行密钥',
+                                  style: textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          '继续',
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '通行密钥需 iOS 15+ 且已在系统内配置',
+                        textAlign: TextAlign.center,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ] else if (_step == _LoginStep.preparingPassword) ...[
@@ -500,32 +583,6 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           '返回',
                           style: textTheme.labelLarge,
-                        ),
-                      ),
-                    ],
-                    if (_step == _LoginStep.enterUsername) ...[
-                      const SizedBox(height: 12),
-                      Center(
-                        child: Obx(
-                          () => TextButton(
-                            onPressed: _passkeyBusy.value
-                                ? null
-                                : () => unawaited(_loginWithPasskey()),
-                            child: Text(
-                              '通行密钥登录',
-                              style: textTheme.labelLarge,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '需要安装 iOS 17 或更高版本的设备。',
-                          textAlign: TextAlign.center,
-                          style: textTheme.labelSmall?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
                         ),
                       ),
                     ],

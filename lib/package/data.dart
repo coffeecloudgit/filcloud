@@ -37,6 +37,10 @@ class Data {
       ApiConfig.resolve('/api/v1/passkey/login/begin');
   static String get passkeyLoginFinishUrl =>
       ApiConfig.resolve('/api/v1/passkey/login/finish');
+  static String get passkeyLoginBeginDiscoverableUrl =>
+      ApiConfig.resolve('/api/v1/passkey/login/begin-discoverable');
+  static String get passkeyLoginFinishDiscoverableUrl =>
+      ApiConfig.resolve('/api/v1/passkey/login/finish-discoverable');
 
   /// 已登录：绑定通行密钥（仅需 JWT，finish 复用 passkeyRegisterFinishUrl）
   static String get passkeyRegisterBeginAuthedUrl =>
