@@ -8,6 +8,7 @@ import 'package:fils_link/service/passkey_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../tool/app_session.dart';
 import 'login_page.dart';
@@ -21,6 +22,8 @@ class SecurityCenterPage extends StatefulWidget {
 }
 
 class _SecurityCenterPageState extends State<SecurityCenterPage> {
+  static final DateFormat _createdFormat = DateFormat('yyyy-MM-dd HH:mm');
+
   bool _loadingPasskeys = true;
   bool _passkeyActionBusy = false;
   List<Map<String, dynamic>> _passkeys = [];
@@ -100,6 +103,15 @@ class _SecurityCenterPageState extends State<SecurityCenterPage> {
     }
   }
 
+  String _createdSubtitle(dynamic raw) {
+    if (raw == null) return '';
+    final s = raw.toString().trim();
+    if (s.isEmpty) return '';
+    final d = DateTime.tryParse(s);
+    if (d == null) return '';
+    return '添加于 ${_createdFormat.format(d.toLocal())}';
+  }
+
   Future<void> _confirmDelete(Map<String, dynamic> row) async {
     final id = (row['id'] as num?)?.toInt();
     if (id == null) return;
@@ -146,8 +158,11 @@ class _SecurityCenterPageState extends State<SecurityCenterPage> {
         Get.snackbar('提示', finish['msg']?.toString() ?? '移除失败');
         return;
       }
+      final rootNav = Navigator.of(context, rootNavigator: true);
       await HttpData.logout(Data.logoutUrl);
       AppSession.logoutAndReset();
+      if (!mounted) return;
+      rootNav.popUntil((route) => route.isFirst);
       Get.offAll(() => const LoginPage());
     } on PlatformException catch (e) {
       if (e.code != 'passkey_cancelled' && mounted) {
@@ -227,12 +242,22 @@ class _SecurityCenterPageState extends State<SecurityCenterPage> {
                   ..._passkeys.map((row) {
                     final name =
                         row['displayName']?.toString().trim() ?? '通行密钥';
+                    final sub = _createdSubtitle(row['createdAt']);
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
                         name,
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
+                      subtitle: sub.isEmpty
+                          ? null
+                          : Text(
+                              sub,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline),
                         onPressed: _passkeyActionBusy

@@ -55,7 +55,14 @@ class _SettingPageState extends State<SettingPage> {
         children: [
           InkWell(
             borderRadius: BorderRadius.circular(20),
-            onTap: () => Get.to(() => const SecurityCenterPage()),
+            onTap: () {
+              // 从底部 Sheet 打开时勿用 Get.to，否则与 Modal 路由栈冲突，返回后再次点击无响应。
+              Navigator.of(context, rootNavigator: true).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => const SecurityCenterPage(),
+                ),
+              );
+            },
             child: Container(
               height: 60,
               decoration: const BoxDecoration(

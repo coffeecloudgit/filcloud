@@ -79,7 +79,12 @@ class _StartState extends State<Start> {
             onPressed: () async {
               await SaveData.markPasskeyOnboardingPrompted(username);
               if (ctx.mounted) Navigator.of(ctx).pop();
-              if (mounted) await Get.to(() => const SecurityCenterPage());
+              if (!mounted) return;
+              await Navigator.of(context, rootNavigator: true).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => const SecurityCenterPage(),
+                ),
+              );
             },
             child: const Text('前往安全中心'),
           ),
